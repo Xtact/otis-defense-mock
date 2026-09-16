@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>O.T.I.S. Domain Theater // SkyGuard Defense</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #000; color: #00ffcc; font-family: 'Courier New', monospace;
+            height: 100vh; overflow: hidden; display: flex; flex-direction: column;
+            -webkit-user-select: none; user-select: none;
+        }
+        #initScreen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 99999; gap: 30px;
+        }
+        #initScreen h1 { color: #ff3333; font-size: 1.6rem; letter-spacing: 3px; text-shadow: 0 0 20px rgba(255,51,51,0.6); }
+        #initScreen p  { color: #00ffcc; font-size: 0.75rem; letter-spacing: 4px; }
+        #startBtn {
+            padding: 18px 40px; font-size: 18px; font-family: 'Courier New', monospace; font-weight: bold;
+            color: #00ffcc; background: rgba(0,255,204,0.08); border: 2px solid #00ffcc;
+            box-shadow: 0 0 25px rgba(0,255,204,0.4); cursor: pointer; text-transform: uppercase;
+            letter-spacing: 2px; transition: all 0.2s;
+        }
+        #startBtn:hover { background: rgba(0,255,204,0.15); box-shadow: 0 0 40px rgba(0,255,204,0.6); }
+
+        /* ── HEADER — compact ── */
+        #header {
+            display: none; justify-content: space-between; align-items: center;
+            padding: 5px 14px; border-bottom: 1px solid #1a332d; background: #050505; z-index: 50;
+        }
+        #header h1 { color: #ff3333; font-size: 0.72rem; letter-spacing: 2px; }
+        #header .tagline { color: #00ffcc; font-size: 0.52rem; letter-spacing: 2px; opacity: 0.6; margin-top: 1px; }
+        .sys-time { font-size: 0.58rem; color: #00ffcc; opacity: 0.5; }
+
+        /* ── DOMAIN BAR ── */
+        #domainBar {
+            display: none; align-items: center; gap: 6px;
+            border-bottom: 1px solid #1a332d; background: #030303;
+            overflow-x: auto; scrollbar-width: none; flex-shrink: 0;
+            padding: 6px 8px 6px 8px;
+            position: relative;
+        }
+        #domainBar::-webkit-scrollbar { display: none; }
+
+        /* ── CAROUSEL TABS — orange theme ── */
+        .domain-tab {
+            padding: 9px 18px;
+            font-size: 0.70rem;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            letter-spacing: 1.6px;
+            text-transform: uppercase;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+            color: #ffcc88;
+            background: linear-gradient(180deg, rgba(255,140,0,0.14) 0%, rgba(180,80,0,0.28) 100%);
+            border: 1px solid rgba(255,140,0,0.45);
+            border-radius: 5px;
+            position: relative;
+            box-shadow: 0 0 7px rgba(255,140,0,0.12);
+            text-shadow: 0 0 7px rgba(255,160,0,0.35);
+            flex-shrink: 0;
+        }
+        .domain-tab:hover {
+            color: #fff8ee;
+            background: linear-gradient(180deg, rgba(255,160,0,0.32) 0%, rgba(220,100,0,0.55) 100%);
+            border-color: #ffaa00;
+            transform: translateY(-2px);
+            box-shadow: 0 0 20px rgba(255,140,0,0.55), 0 4px 10px rgba(0,0,0,0.6);
+            text-shadow: 0 0 12px rgba(255,180,0,0.9);
+        }
+        .domain-tab:active { transform: translateY(0); }
+        .domain-tab.active {
+            color: #1a0800;
+            background: linear-gradient(180deg, #ffdd88 0%, #ff8c00 60%, #cc5500 100%);
+            border-color: #ffe0aa;
+            text-shadow: none;
+            box-shadow:
+                0 0 24px rgba(255,140,0,0.8),
+                0 0 6px rgba(255,220,100,0.4),
+                inset 0 1px 0 rgba(255,255,200,0.45);
+            transform: translateY(-1px);
+            letter-spacing: 1.9px;
+        }
+        .domain-tab.active::after {
+            content: 'LIVE';
+            position: absolute; top: -8px; right: 7px;
+            font-size: 0.40rem; padding: 2px 5px; border-radius: 999px;
+            background: #ff3333; color: #fff; letter-spacing: 1.5px;
+            box-shadow: 0 0 8px rgba(255,51,51,0.85);
+            animation: live-blink 1.4s ease-in-out infinite;
+        }
+        @keyframes live-blink {
+            0%, 100% { opacity: 1;    box-shadow: 0 0 8px rgba(255,51,51,0.85); }
+            50%       { opacity: 0.5; box-shadow: 0 0 3px rgba(255,51,51,0.3);  }
+        }
+
+        /* ── SCROLL ARROW ── */
+        #scrollArrow {
+            display: none;
+            align-items: center; justify-content: center;
+            position: absolute; right: 0; top: 0; bottom: 0;
+            width: 36px;
+            background: linear-gradient(90deg, transparent 0%, #030303 55%);
+            pointer-events: none;
+            z-index: 10;
+        }
+        #scrollArrow span {
+            font-size: 0.95rem;
+            color: #ff8c00;
+            animation: arrow-pulse 1.1s ease-in-out infinite;
+            text-shadow: 0 0 10px rgba(255,140,0,0.9);
+            pointer-events: none;
+        }
+        @keyframes arrow-pulse {
+            0%, 100% { opacity: 1;   transform: translateX(0);   }
+            50%       { opacity: 0.4; transform: translateX(3px); }
+        }
+
+        #theater {
+            display: none; flex: 1; position: relative; overflow: hidden; background: #050505;
+            min-height: 0;
+        }
+        .split-container {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: grid; grid-template-columns: 1fr 1fr; gap: 2px; background: #111;
+        }
+        .video-pane { position: relative; overflow: hidden; background: #000; }
+        .video-pane video {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain;
+        }
+        #xrayCanvas  { position: absolute; display: none; z-index: 2; }
+        #interceptCanvas { position: absolute; display: none; pointer-events: none; z-index: 5; }
+        .pane-label {
+            position: absolute; top: 10px; left: 12px; z-index: 10;
+            font-size: 0.6rem; font-weight: bold; letter-spacing: 2px; padding: 3px 8px; border-radius: 2px;
+        }
+        .label-fpv { background: rgba(0,255,204,0.15); color: #00ffcc; border: 1px solid #00ffcc44; }
+        .label-xray { background: rgba(0,255,255,0.15); color: #00ffff; border: 1px solid #00ffff44; }
+        .divider-line {
+            position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+            width: 2px; height: 100%; background: #1a332d; z-index: 20; pointer-events: none;
+        }
+        .grid-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: linear-gradient(rgba(0,255,204,0.04) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(0,255,204,0.04) 1px, transparent 1px);
+            background-size: 40px 40px; pointer-events: none; z-index: 3;
+        }
+        .reticle {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+            width: 120px; height: 120px; border: 1px solid rgba(0,255,204,0.25);
+            border-radius: 50%; pointer-events: none; z-index: 4;
+        }
+        .reticle::before, .reticle::after { content:''; position:absolute; background:rgba(0,255,204,0.4); }
+        .reticle::before { top:50%; left:-15px; right:-15px; height:1px; }
+        .reticle::after  { left:50%; top:-15px; bottom:-15px; width:1px; }
+        .hud-left, .hud-right {
+            position: absolute; top: 12px; display: flex; flex-direction: column; gap: 5px;
+            font-size: 0.6rem; pointer-events: none; z-index: 5;
+        }
+        .hud-left { left: 8px; }
+        .hud-right { right: 8px; text-align: right; }
+        .hud-item {
+            background: rgba(0,0,0,0.85); padding: 4px 7px;
+            display: flex; align-items: center; gap: 5px; border-left: 2px solid #00ffcc22;
+        }
+        .hud-right .hud-item { flex-direction:row-reverse; border-left:none; border-right:2px solid #00ffcc22; }
+        .status-led { width:5px; height:5px; border-radius:50%; background:#00ffcc; box-shadow:0 0 6px rgba(0,255,204,0.7); flex-shrink:0; }
+        .led-red  { background:#ff3333!important; box-shadow:0 0 8px rgba(255,51,51,0.9)!important; }
+        .led-cyan { background:#00ffff!important; box-shadow:0 0 8px rgba(0,255,255,0.9)!important; }
+        #alarmOverlay {
+            display: none; position: absolute; top: 15px; left: 50%; transform: translateX(-50%);
+            background: rgba(200,0,0,0.95); color: #fff; padding: 6px 18px; font-size: 0.75rem;
+            font-weight: bold; border: 2px solid #fff; z-index: 30; white-space: nowrap;
+            text-shadow: 1px 1px 0 #000; letter-spacing: 1px;
+        }
+        #codeStream {
+            position: absolute; top: 40px; left: 12px; width: 220px; height: 200px;
+            font-size: 0.55rem; color: rgba(0,255,204,0.5); overflow: hidden;
+            pointer-events: none; z-index: 5; display: flex; flex-direction: column; justify-content: flex-end;
+        }
+        @keyframes ring-pulse {
+            0%,100% { opacity:0.3; transform:translate(-50%,-50%) scale(1); }
+            50%      { opacity:0.8; transform:translate(-50%,-50%) scale(1.1); }
+        }
+        .reticle.alert { border-color:rgba(255,51,51,0.8)!important; animation:ring-pulse 0.8s ease-in-out infinite; }
+        .status-segment { display:flex; align-items:center; gap:8px; }
+        .status-dot { width:6px; height:6px; border-radius:50%; background:#00ffcc; box-shadow:0 0 5px #00ffcc; }
+        .status-dot.red { background:#ff3333; box-shadow:0 0 5px #ff3333; }
+
+        /* ═════════════════════════════════════════════════════════════
+           OTIS EVIDENCE RECORD — SkyGuard brand overlay
+           Colors match skyguarddefense.com exactly (not the award
+           tracker's palette): navy bg, gold + cyan accents.
+           ═════════════════════════════════════════════════════════════ */
+        :root {
+            --sg-bg-dark: #050b14;
+            --sg-bg-card: rgba(13,25,41,0.92);
+            --sg-gold: #FFD700;
+            --sg-gold-bright: #FFE44D;
+            --sg-blue: #00F0FF;
+            --sg-text-primary: #FFFFFF;
+            --sg-text-secondary: #CBD5E1;
+            --sg-text-tertiary: #94A3B8;
+            --sg-border: rgba(255,255,255,0.15);
+            --sg-red: #ff4444;
+        }
+        #evidenceRecord {
+            display: none;
+            position: absolute;
+            bottom: 14px; left: 12px;
+            width: 260px;
+            background: var(--sg-bg-card);
+            border: 1px solid var(--sg-border);
+            border-radius: 6px;
+            padding: 12px 14px;
+            z-index: 25;
+            font-family: 'Inter', 'Courier New', monospace;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.55);
+            backdrop-filter: blur(6px);
+        }
+        #evidenceRecord::before {
+            content: "";
+            position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+            background: var(--sg-blue);
+            border-radius: 6px 0 0 6px;
+        }
+        #evidenceRecord[data-result="REJECTED"]::before { background: var(--sg-red); }
+        #evidenceRecord .er-head {
+            display: flex; justify-content: space-between; font-size: 0.55rem;
+            color: var(--sg-text-tertiary); letter-spacing: 1px; margin-bottom: 4px;
+        }
+        #evidenceRecord .er-result {
+            font-size: 0.95rem; font-weight: 700; color: var(--sg-blue);
+            letter-spacing: 0.5px; margin-bottom: 8px;
+        }
+        #evidenceRecord[data-result="REJECTED"] .er-result { color: var(--sg-red); }
+        #evidenceRecord .er-checks {
+            list-style: none; display: flex; flex-direction: column; gap: 3px; margin-bottom: 6px;
+        }
+        #evidenceRecord .er-checks li {
+            display: flex; justify-content: space-between; font-size: 0.62rem;
+            color: var(--sg-text-secondary); background: rgba(255,255,255,0.04);
+            padding: 3px 6px; border-radius: 3px;
+        }
+        #evidenceRecord .er-checks .pass { color: var(--sg-blue); font-weight: 700; }
+        #evidenceRecord .er-checks .fail { color: var(--sg-red); font-weight: 700; }
+        #evidenceRecord .er-footer {
+            display: flex; justify-content: space-between; font-size: 0.5rem;
+            color: var(--sg-text-tertiary); border-top: 1px solid var(--sg-border);
+            padding-top: 6px; letter-spacing: 0.5px;
+        }
+        #evidenceRecord .er-badge {
+            background: rgba(255,255,255,0.06); border: 1px solid var(--sg-border);
+            border-radius: 3px; padding: 1px 5px; color: var(--sg-gold);
+        }
+    </style>
+</head>
+<body>
+
+<div id="initScreen">
+    <h1>O.T.I.S. // DOMAIN THEATER</h1>
+    <p>- SKYGUARD DEFENSE SYSTEMS -</p>
+    <button id="startBtn">INITIALIZE UPLINK</button>
+</div>
+
+<!-- HEADER — compact, no spelled-out subtitle -->
+<div id="header">
+    <div>
+        <h1>O.T.I.S. // DOMAIN THEATER</h1>
+        <div class="tagline">SKYGUARD DEFENSE — DUAL FEED ACTIVE</div>
+    </div>
+    <div class="sys-time" id="sysTime">SYS: --:--:--</div>
+</div>
+
+<!-- DOMAIN TABS + SCROLL ARROW -->
+<div id="domainBar">
+    <button class="domain-tab active" onclick="App.setDomain('c-uas',this)">C-UAS / FlyTrap</button>
+    <button class="domain-tab" onclick="App.setDomain('railcar',this)">Semi-Auto / Rail</button>
+    <button class="domain-tab" onclick="App.setDomain('maritime',this)">Maritime / Fog Nav</button>
+    <button class="domain-tab" onclick="App.setDomain('intercept',this)">Drone Intercept</button>
+    <div id="scrollArrow"><span>&#x25B6;</span></div>
+</div>
+
+<!-- THEATER -->
+<div id="theater">
+    <div class="split-container">
+
+        <!-- LEFT: RAW FEED -->
+        <div class="video-pane" id="leftPane">
+            <video id="mainVideo" playsinline webkit-playsinline muted loop preload="auto"></video>
+            <div class="grid-overlay"></div>
+            <div class="reticle" id="reticleLeft"></div>
+            <div class="pane-label label-fpv" id="labelLeft">FPV RAW</div>
+            <div class="hud-left">
+                <div class="hud-item" id="sysContainer">
+                    <span class="status-led" id="led-sys"></span><span id="txt-sys">SYS: ONLINE</span>
+                </div>
+                <div class="hud-item">
+                    <span class="status-led"></span><span id="altReadout">ALT: 40.2 FT</span>
+                </div>
+                <div class="hud-item">
+                    <span class="status-led"></span><span id="hdgReadout">HDG: 274&deg; W</span>
+                </div>
+                <div class="hud-item" id="tgtContainer">
+                    <span class="status-led" id="led-tgt"></span><span id="txt-tgt">TGT: ACQUIRING...</span>
+                </div>
+            </div>
+            <div id="codeStream"></div>
+        </div>
+
+        <!-- RIGHT: X-RAY / PROCESSED FEED -->
+        <div class="video-pane" id="rightPane">
+            <video id="xrayVideo" playsinline webkit-playsinline muted loop preload="auto"
+                   style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;z-index:1;"></video>
+            <canvas id="xrayCanvas"></canvas>
+            <canvas id="interceptCanvas"></canvas>
+            <div class="grid-overlay" style="z-index:3;"></div>
+            <div class="reticle" id="reticleRight" style="z-index:4;"></div>
+            <div class="pane-label label-xray" id="labelRight" style="z-index:10;">X-RAY // OTIS PROCESSING</div>
+            <div class="hud-right" style="z-index:5;">
+                <div class="hud-item"><span class="status-led"></span><span>BAT: 84%</span></div>
+                <div class="hud-item"><span class="status-led"></span><span>LINK: SECURE</span></div>
+                <div class="hud-item" id="camContainer">
+                    <span class="status-led" id="led-cam"></span><span id="camStatus">CAM: FPV</span>
+                </div>
+                <div class="hud-item">
+                    <span class="status-led" id="led-insitu" style="background:#555;box-shadow:none;"></span>
+                    <span id="insituStatus" style="color:#555;">CORE: INSITU LABS</span>
+                </div>
+            </div>
+
+            <!-- ══════════════ OTIS EVIDENCE RECORD (SkyGuard brand) ══════════════ -->
+            <div id="evidenceRecord" data-result="CONSISTENT">
+                <div class="er-head">
+                    <span id="er-trackid">TRACK OT-0000</span>
+                    <span id="er-time">--:--:--</span>
+                </div>
+                <div class="er-result" id="er-result">CONSISTENT</div>
+                <ul class="er-checks">
+                    <li><span>Scale vs. range</span><span class="pass" id="er-check-scale">PASS</span></li>
+                    <li><span>Motion continuity</span><span class="pass" id="er-check-motion">PASS</span></li>
+                    <li><span>Perspective fit</span><span class="pass" id="er-check-persp">PASS</span></li>
+                    <li><span>Kinematic bounds</span><span class="pass" id="er-check-kin">PASS</span></li>
+                </ul>
+                <div class="er-footer">
+                    <span>SENSOR: EO/IR-01</span>
+                    <span class="er-badge" id="er-footer-badge">PASSED &rarr; FUSION</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <div class="divider-line"></div>
+    <div id="alarmOverlay"></div>
+    <div style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);
+                font-size:0.58rem;color:#00ffcc28;letter-spacing:2px;pointer-events:none;z-index:20;">
+        <span id="domainLabelText">DOMAIN: C-UAS / FlyTrap</span>
+    </div>
+</div>
+
+<!-- STATUS BAR -->
+<div id="statusBar" style="display:none;background:#030303;border-top:1px solid #1a332d;
+     padding:5px 20px;flex-shrink:0;justify-content:space-between;align-items:center;font-size:0.6rem;">
+    <div class="status-segment"><div class="status-dot" id="stat1"></div><span>OTIS PIPELINE: ACTIVE</span></div>
+    <div class="status-segment"><span id="sdmReadout">METRIC A: --</span></div>
+    <div class="status-segment"><span id="kcmReadout">METRIC B: --</span></div>
+    <div class="status-segment"><div class="status-dot" id="stat2"></div><span>PATENT PENDING // SKYGUARD</span></div>
+</div>
+
+<script>
+// ════════════════════════════════════════════
+// DOMAIN CONFIG
+// ════════════════════════════════════════════
+const DOMAINS = {
+    'c-uas':     { main:'insitu_poc.mp4',     xray:'true_xray.mp4',      sobel:true,
+                   label:'DOMAIN: C-UAS / FlyTrap',           fpv:'FPV RAW',     xrayLabel:'STRUCTURAL X-RAY'  },
+    'railcar':   { main:'rail_true.mp4',      xray:'rail_xray.mp4',      sobel:false,
+                   label:'DOMAIN: Semi-Autonomous / Railroad', fpv:'FRONT CAM',   xrayLabel:'GEOMETRY VERIFY'   },
+    'maritime':  { main:'maritime_true.mp4',  xray:'maritime_xray.mp4',  sobel:false,
+                   label:'DOMAIN: Maritime / Fog Navigation',  fpv:'VESSEL CAM',  xrayLabel:'STRUCTURE PROBE'   },
+    'intercept': { main:'intercept_true.mp4', xray:'intercept_xray.mp4', sobel:false,
+                   label:'DOMAIN: Hostile Drone Intercept',    fpv:'TRACK RAW',   xrayLabel:'INTERCEPT VECTOR'  }
+};
+
+const ALARM = {
+    'c-uas'    : 'ANOMALY DETECTED // X-RAY ACTIVE',
+    'railcar'  : 'STRUCTURE DETECTED // X-RAY ACTIVE',
+    'maritime' : 'OBSTRUCTION DETECTED // X-RAY ACTIVE',
+    'intercept': 'UAV TARGETED // INTERCEPT VECTOR CONFIRMED'
+};
+const TGT = {
+    'c-uas'    : 'TGT: LOCK / X-RAY',
+    'railcar'  : 'TGT: STRUCTURE LOCK',
+    'maritime' : 'TGT: OBSTRUCTION LOCK',
+    'intercept': 'TGT: UAV TARGETED'
+};
+
+// ════════════════════════════════════════════
+// SCROLL ARROW VISIBILITY
+// ════════════════════════════════════════════
+function updateScrollArrow() {
+    const bar = document.getElementById('domainBar');
+    const arrow = document.getElementById('scrollArrow');
+    if (!bar || !arrow) return;
+    const overflowing = bar.scrollWidth > bar.clientWidth + 4;
+    const atEnd = bar.scrollLeft + bar.clientWidth >= bar.scrollWidth - 8;
+    arrow.style.display = (overflowing && !atEnd) ? 'flex' : 'none';
+}
+
+// ════════════════════════════════════════════
+// SOBEL ENGINE
+// ════════════════════════════════════════════
+const Sobel = {
+    gl:null, prog:null, tex:null, ok:false,
+    sens:1.5, contrast:1.0, gate:0.0, inv:0,
+
+    init(cv) {
+        const gl = cv.getContext('webgl',{alpha:true,preserveDrawingBuffer:true});
+        if (!gl) return;
+        this.gl = gl;
+        const vs=`attribute vec2 p,tc;varying vec2 v;void main(){gl_Position=vec4(p,0,1);v=vec2(tc.x,1.-tc.y);}`;
+        const fs=`precision mediump float;varying vec2 v;uniform sampler2D img;uniform vec2 res;
+            uniform float sens,cont,gate;uniform int inv;
+            float L(vec2 o){vec3 c=texture2D(img,v+o).rgb;return clamp((dot(c,vec3(.299,.587,.114))-.5)*cont+.5,0.,1.);}
+            void main(){vec2 s=1./res;
+                float tl=L(vec2(-s.x,s.y)),tc2=L(vec2(0.,s.y)),tr=L(vec2(s.x,s.y)),
+                      ml=L(vec2(-s.x,0.)),mr=L(vec2(s.x,0.)),
+                      bl=L(vec2(-s.x,-s.y)),bc=L(vec2(0.,-s.y)),br=L(vec2(s.x,-s.y));
+                float dx=-tl+tr-2.*ml+2.*mr-bl+br,dy=-tl-2.*tc2-tr+bl+2.*bc+br;
+                float e=clamp(sqrt(dx*dx+dy*dy)*sens,0.,1.);
+                if(e<gate)e=0.;if(inv==1)e=1.-e;
+                gl_FragColor=vec4(e,e,e,.85);}`;
+        const sh=(t,s)=>{const h=gl.createShader(t);gl.shaderSource(h,s);gl.compileShader(h);return h;};
+        this.prog=gl.createProgram();
+        gl.attachShader(this.prog,sh(gl.VERTEX_SHADER,vs));
+        gl.attachShader(this.prog,sh(gl.FRAGMENT_SHADER,fs));
+        gl.linkProgram(this.prog); gl.useProgram(this.prog);
+        const buf=(d)=>{const b=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,b);gl.bufferData(gl.ARRAY_BUFFER,d,gl.STATIC_DRAW);};
+        buf(new Float32Array([-1,-1,1,-1,-1,1,1,1]));
+        const pl=gl.getAttribLocation(this.prog,'p');gl.enableVertexAttribArray(pl);gl.vertexAttribPointer(pl,2,gl.FLOAT,false,0,0);
+        buf(new Float32Array([0,0,1,0,0,1,1,1]));
+        const tl=gl.getAttribLocation(this.prog,'tc');gl.enableVertexAttribArray(tl);gl.vertexAttribPointer(tl,2,gl.FLOAT,false,0,0);
+        this.tex=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,this.tex);
+        [gl.TEXTURE_WRAP_S,gl.TEXTURE_WRAP_T].forEach(p=>gl.texParameteri(gl.TEXTURE_2D,p,gl.CLAMP_TO_EDGE));
+        [gl.TEXTURE_MIN_FILTER,gl.TEXTURE_MAG_FILTER].forEach(p=>gl.texParameteri(gl.TEXTURE_2D,p,gl.LINEAR));
+        gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+        this.ok=true;
+    },
+
+    render(vid) {
+        if (!this.ok||vid.readyState<2) return;
+        const gl=this.gl,vw=vid.videoWidth,vh=vid.videoHeight;
+        if (!vw||!vh) return;
+        if (gl.canvas.width!==vw||gl.canvas.height!==vh){gl.canvas.width=vw;gl.canvas.height=vh;}
+        gl.viewport(0,0,vw,vh);gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.bindTexture(gl.TEXTURE_2D,this.tex);
+        gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,vid);
+        const u=(n,v)=>gl.uniform1f(gl.getUniformLocation(this.prog,n),v);
+        gl.uniform2f(gl.getUniformLocation(this.prog,'res'),vw,vh);
+        u('sens',this.sens);u('cont',this.contrast);u('gate',this.gate);
+        gl.uniform1i(gl.getUniformLocation(this.prog,'inv'),this.inv);
+        gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+    },
+
+    clear() {
+        if (!this.ok) return;
+        this.gl.clearColor(0,0,0,0);this.gl.clear(this.gl.COLOR_BUFFER_BIT);
+    }
+};
+
+// ════════════════════════════════════════════
+// INTERCEPT OVERLAY
+// ════════════════════════════════════════════
+const Overlay = {
+    active:false, trail:[], lockProg:0, locked:false,
+
+    pos(t) {
+        const ct=Math.max(0,Math.min(8,t));
+        if (ct<1.35) return null;
+        if (ct<=3.5){const p=(ct-1.35)/2.15;return{x:0.20+p*0.30,y:0.50,s:0.025+p*0.105};}
+        if (ct<=5.0){const p=(ct-3.5)/1.5;return{x:0.50+p*0.02,y:0.50,s:0.130-p*0.040};}
+        const p=(ct-5.0)/3.0;
+        return{x:0.52,y:0.50-p*0.06,s:Math.max(0.090-p*p*0.078,0.008)};
+    },
+
+    draw(cv,t) {
+        const ctx=cv.getContext('2d'),W=cv.width,H=cv.height;
+        ctx.clearRect(0,0,W,H);
+        const st=this.pos(t);
+        if (!st||!this.active) return;
+        const cx=st.x*W,cy=st.y*H,bw=st.s*W,bh=bw*0.55;
+        const fi=Math.min(1,(t-1.35)/0.45);
+        const fo=st.s<0.015?Math.max(0,(st.s-0.008)/0.007):1;
+        const alpha=fi*fo;
+        if (alpha<=0) return;
+        this.lockProg=Math.min(1,Math.max(0,(t-3.0)/0.8));
+        this.locked=t>=3.5;
+        const base=this.locked?'#ff4444':'#00ff88';
+        const gR=this.locked?'rgba(255,68,68,':'rgba(0,255,136,';
+        const acc=this.locked?'#ff8888':'#88ffcc';
+        this.trail.push({x:cx,y:cy,t});
+        if(this.trail.length>60)this.trail.shift();
+        for(let i=1;i<this.trail.length;i++){
+            const age=t-this.trail[i].t,f=Math.max(0,1-age/1.2)*alpha*0.4;
+            ctx.beginPath();ctx.moveTo(this.trail[i-1].x,this.trail[i-1].y);
+            ctx.lineTo(this.trail[i].x,this.trail[i].y);
+            ctx.strokeStyle=gR+f+')';ctx.lineWidth=1.5;ctx.setLineDash([3,5]);ctx.stroke();ctx.setLineDash([]);
+        }
+        const bx=cx-bw,by=cy-bh,bx2=cx+bw,by2=cy+bh;
+        const cl=Math.min(bw,bh)*0.45,pulse=0.6+0.4*Math.sin(t*6);
+        ctx.save();ctx.shadowColor=base;ctx.shadowBlur=10;ctx.strokeStyle=base;
+        ctx.globalAlpha=alpha*pulse;ctx.lineWidth=1.5;
+        [[bx,by,cl,0,0,cl],[bx2,by,-cl,0,0,cl],[bx,by2,cl,0,0,-cl],[bx2,by2,-cl,0,0,-cl]
+        ].forEach(([ox,oy,d1,e1,d2,e2])=>{
+            ctx.beginPath();ctx.moveTo(ox+d1,oy+e1);ctx.lineTo(ox,oy);ctx.lineTo(ox+d2,oy+e2);ctx.stroke();
+        });
+        ctx.restore();
+        const rR=bw*(1.4-this.lockProg*0.5),rot=t*1.2;
+        ctx.save();ctx.globalAlpha=alpha;ctx.shadowColor=base;ctx.shadowBlur=12;
+        ctx.strokeStyle=base;ctx.lineWidth=1.2;
+        for(let s=0;s<4;s++){ctx.beginPath();ctx.arc(cx,cy,rR,rot+s*Math.PI/2+0.15,rot+s*Math.PI/2+Math.PI/2-0.15);ctx.stroke();}
+        if(this.lockProg>0.3){
+            const ca=(this.lockProg-0.3)/0.7,cs=rR*0.25;
+            ctx.globalAlpha=alpha*ca;ctx.strokeStyle=acc;ctx.lineWidth=1;
+            ctx.beginPath();ctx.moveTo(cx-cs,cy);ctx.lineTo(cx+cs,cy);ctx.stroke();
+            ctx.beginPath();ctx.moveTo(cx,cy-cs);ctx.lineTo(cx,cy+cs);ctx.stroke();
+        }
+        ctx.restore();
+        if(this.lockProg>0.1){
+            const va=(this.lockProg-0.1)/0.9,lead=bw*3.5;
+            let vx=1,vy=0;
+            if(this.trail.length>=8){
+                const r=this.trail[this.trail.length-1],o=this.trail[this.trail.length-8];
+                const dx=r.x-o.x,dy=r.y-o.y,len=Math.sqrt(dx*dx+dy*dy)||1;vx=dx/len;vy=dy/len;
+            }
+            const ax=cx+vx*lead,ay=cy+vy*lead,px=-vy,py=vx;
+            ctx.save();ctx.globalAlpha=alpha*va;ctx.shadowColor=base;ctx.shadowBlur=8;
+            ctx.strokeStyle=base;ctx.lineWidth=1.5;ctx.setLineDash([6,4]);
+            ctx.beginPath();ctx.moveTo(cx+vx*bw,cy+vy*bw);ctx.lineTo(ax-vx*10,ay-vy*10);ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.beginPath();ctx.moveTo(ax,ay);
+            ctx.lineTo(ax-vx*10+px*6,ay-vy*10+py*6);ctx.lineTo(ax-vx*10-px*6,ay-vy*10-py*6);
+            ctx.closePath();ctx.fillStyle=base;ctx.fill();ctx.restore();
+        }
+        if(this.lockProg>0.05){
+            const ta=Math.min(1,(this.lockProg-0.05)/0.3)*alpha;
+            const conf=Math.round(60+this.lockProg*37.4),rng=Math.round(380-this.lockProg*238);
+            const tagX=Math.min(cx+bw+8,W-92),tagY=Math.max(cy-bh-4,18);
+            ctx.save();ctx.globalAlpha=ta;ctx.font='bold 10px Courier New';
+            ctx.fillStyle=base;ctx.shadowColor=base;ctx.shadowBlur=6;
+            [`CLASS: UAS`,`CONF: ${conf}.${Math.round(t*10)%10}%`,`RNG: ${rng}M`,
+             this.locked?`VECTOR: LOCKED`:`VECTOR: SOLVING`
+            ].forEach((s,i)=>ctx.fillText(s,tagX,tagY+i*13));
+            ctx.restore();
+        }
+    },
+
+    reset(){this.active=false;this.trail=[];this.lockProg=0;this.locked=false;}
+};
+
+// ════════════════════════════════════════════
+// OTIS EVIDENCE RECORD — SkyGuard-branded HUD panel
+// Populated at t>=3.5s (intercept trigger) alongside
+// the existing alarm/status sequence. Uses CONSISTENT/
+// REJECTED wording consistent with the pitch deck.
+// ════════════════════════════════════════════
+const EvidenceRecord = {
+    show(domain, t) {
+        const el = document.getElementById('evidenceRecord');
+        const consistent = domain !== 'intercept';
+        el.dataset.result = consistent ? 'CONSISTENT' : 'REJECTED';
+        document.getElementById('er-trackid').innerText = 'TRACK OT-' + String(Math.floor(t*1000)).padStart(4,'0').slice(-4);
+        document.getElementById('er-time').innerText = new Date().toTimeString().split(' ')[0];
+        document.getElementById('er-result').innerText = consistent ? 'CONSISTENT' : 'REJECTED';
+        const checks = ['er-check-scale','er-check-motion','er-check-persp','er-check-kin'];
+        checks.forEach((id) => {
+            const c = document.getElementById(id);
+            c.innerText = consistent ? 'PASS' : 'FAIL';
+            c.className = consistent ? 'pass' : 'fail';
+        });
+        document.getElementById('er-footer-badge').innerText = consistent ? 'PASSED \u2192 FUSION' : 'HARD-ZEROED';
+        el.style.display = 'block';
+    },
+    hide() {
+        document.getElementById('evidenceRecord').style.display = 'none';
+    }
+};
+
+// ════════════════════════════════════════════
+// LAYOUT
+// ════════════════════════════════════════════
+function layout() {
+    const pane=document.getElementById('rightPane');
+    const vid=document.getElementById('xrayVideo');
+    const sob=document.getElementById('xrayCanvas');
+    const ic=document.getElementById('interceptCanvas');
+    const pW=pane.clientWidth,pH=pane.clientHeight;
+    const vW=vid.videoWidth||pW,vH=vid.videoHeight||pH;
+    const vAR=vW/vH,pAR=pW/pH;
+    let dW,dH;
+    if(vAR>pAR){dW=pW;dH=Math.round(pW/vAR);}else{dH=pH;dW=Math.round(pH*vAR);}
+    const L=Math.round((pW-dW)/2),T=Math.round((pH-dH)/2);
+    sob.width=vW;sob.height=vH;
+    sob.style.left=L+'px';sob.style.top=T+'px';sob.style.width=dW+'px';sob.style.height=dH+'px';
+    ic.width=dW;ic.height=dH;
+    ic.style.left=L+'px';ic.style.top=T+'px';ic.style.width=dW+'px';ic.style.height=dH+'px';
+    updateScrollArrow();
+}
+
+// ════════════════════════════════════════════
+// APP
+// ════════════════════════════════════════════
+const App = {
+    domain:'c-uas',
+    f1:false,f2:false,f3:false,f4:false,
+    sobelOn:false,
+    raf:null,
+    codeTick:null,
+    cvLines:[
+        "cv::Mat frame; cap >> frame;","cv::cvtColor(frame,gray,COLOR_BGR2GRAY);",
+        "cv::Canny(blur,edges,40,120);","metric_a=engine.evaluate(frame);",
+        "metric_b=engine.analyze(geom);","state_estimator.predict();",
+        "cfg.alpha=0.10;cfg.beta=1000.0;","tracker.update(sig);","pipeline.infer(input);"
+    ],
+
+    init() {
+        document.getElementById('startBtn').onclick=()=>this.launch();
+        setInterval(()=>{
+            document.getElementById('sysTime').innerText='SYS: '+new Date().toTimeString().split(' ')[0];
+        },1000);
+        window.addEventListener('resize',()=>{layout();updateScrollArrow();});
+    },
+
+    launch() {
+        document.getElementById('initScreen').style.display='none';
+        document.getElementById('header').style.display='flex';
+        document.getElementById('domainBar').style.display='flex';
+        document.getElementById('theater').style.display='block';
+        document.getElementById('statusBar').style.display='flex';
+        Sobel.init(document.getElementById('xrayCanvas'));
+        this.codeTick=setInterval(()=>this.pushCode(false),220);
+        this.runRaf();
+        this.loadDomain('c-uas');
+        const bar=document.getElementById('domainBar');
+        bar.addEventListener('scroll', updateScrollArrow);
+        setTimeout(updateScrollArrow, 100);
+    },
+
+    runRaf() {
+        const mainVid=document.getElementById('mainVideo');
+        const xrayVid=document.getElementById('xrayVideo');
+        const icCv=document.getElementById('interceptCanvas');
+        const loop=()=>{
+            if (this.sobelOn) Sobel.render(xrayVid);
+            if (this.domain==='intercept'&&Overlay.active) {
+                Overlay.draw(icCv, mainVid.currentTime);
+            }
+            this.raf=requestAnimationFrame(loop);
+        };
+        this.raf=requestAnimationFrame(loop);
+    },
+
+    loadDomain(d) {
+        this.domain=d;
+        const cfg=DOMAINS[d];
+        const main=document.getElementById('mainVideo');
+        const xray=document.getElementById('xrayVideo');
+
+        main.ontimeupdate=null;
+        main.oncanplaythrough=null;
+        xray.oncanplaythrough=null;
+        xray.onloadedmetadata=null;
+        main.pause();
+        xray.pause();
+
+        this.f1=false;this.f2=false;this.f3=false;this.f4=false;
+        this.sobelOn=false;
+        Overlay.reset();
+        this.resetUI();
+
+        const sob=document.getElementById('xrayCanvas');
+        const ic=document.getElementById('interceptCanvas');
+        sob.style.display='none'; Sobel.clear();
+        ic.style.display='none';
+        try{ic.getContext('2d').clearRect(0,0,ic.width,ic.height);}catch(e){}
+        EvidenceRecord.hide();
+
+        document.getElementById('domainLabelText').innerText=cfg.label;
+        document.getElementById('labelLeft').innerText=cfg.fpv;
+        document.getElementById('labelRight').innerText=cfg.xrayLabel;
+
+        let mOk=false,xOk=false;
+        const tryPlay=()=>{
+            if (!mOk||!xOk) return;
+            main.currentTime=0; xray.currentTime=0;
+            const doPlay=()=>{
+                xray.play().catch(()=>{});
+                main.ontimeupdate=()=>this.tick(main.currentTime);
+                layout();
+            };
+            main.play().then(doPlay).catch(doPlay);
+        };
+        main.oncanplaythrough=()=>{mOk=true;main.oncanplaythrough=null;tryPlay();};
+        xray.oncanplaythrough=()=>{xOk=true;xray.oncanplaythrough=null;tryPlay();};
+        xray.onloadedmetadata=()=>{layout();};
+        main.src=cfg.main; xray.src=cfg.xray;
+        main.load(); xray.load();
+        if (main.readyState>=4){mOk=true;}
+        if (xray.readyState>=4){xOk=true;}
+        if (mOk&&xOk) tryPlay();
+    },
+
+    setDomain(d,btn) {
+        document.querySelectorAll('.domain-tab').forEach(t=>t.classList.remove('active'));
+        btn.classList.add('active');
+        this.loadDomain(d);
+    },
+
+    tick(t) {
+        if (this.domain==='intercept'&&t>=1.35&&!Overlay.active){
+            Overlay.active=true;
+            document.getElementById('interceptCanvas').style.display='block';
+        }
+        if (t>=2.0&&!this.f1){
+            this.f1=true;
+            this.led('led-sys','led-red');
+            this.txt('txt-sys','SYS: OVERLOAD','#ff3333');
+            document.getElementById('sysContainer').style.color='#ff3333';
+            document.getElementById('sdmReadout').innerText='METRIC A: 0.847';
+            if (this.domain==='intercept') this.alarm('UAV DETECTED // OTIS ACTIVE');
+        }
+        if (t>=2.5&&!this.f2){
+            this.f2=true;
+            this.led('led-tgt','led-red');
+            this.txt('txt-tgt','TGT: DEVIATING','#ff3333');
+            document.getElementById('tgtContainer').style.color='#ff3333';
+            document.getElementById('kcmReadout').innerText='METRIC B: FAIL';
+        }
+        if (t>=3.0&&!this.f3){
+            this.f3=true;
+            this.led('led-insitu','led-red');
+            document.getElementById('insituStatus').style.color='#ff3333';
+            document.getElementById('reticleLeft').classList.add('alert');
+        }
+        if (t>=3.5&&!this.f4){
+            this.f4=true;
+            this.sobelOn=DOMAINS[this.domain].sobel;
+            if (this.sobelOn) document.getElementById('xrayCanvas').style.display='block';
+            this.alarm(ALARM[this.domain]||'ANOMALY DETECTED // X-RAY ACTIVE');
+            this.led('led-cam','led-cyan');
+            this.txt('camStatus','CAM: X-RAY','#00ffff');
+            this.txt('txt-tgt',TGT[this.domain]||'TGT: LOCK');
+            document.getElementById('reticleRight').classList.add('alert');
+            document.getElementById('stat1').classList.add('red');
+            for(let i=0;i<5;i++) this.pushCode(true);
+            EvidenceRecord.show(this.domain, t);
+            layout();
+        }
+    },
+
+    alarm(msg){
+        const el=document.getElementById('alarmOverlay');
+        el.innerText=msg; el.style.display='block';
+    },
+    led(id,cls){ document.getElementById(id).classList.add(cls); },
+    txt(id,val,color){
+        const el=document.getElementById(id); el.innerText=val;
+        if(color) el.style.color=color;
+    },
+
+    resetUI(){
+        document.getElementById('alarmOverlay').style.display='none';
+        document.getElementById('alarmOverlay').innerText='';
+        ['txt-sys','txt-tgt'].forEach((id,i)=>{
+            document.getElementById(id).innerText=i===0?'SYS: ONLINE':'TGT: ACQUIRING...';
+            document.getElementById(id).style.color='';
+        });
+        document.getElementById('sysContainer').style.color='';
+        document.getElementById('tgtContainer').style.color='';
+        document.getElementById('camStatus').innerText='CAM: FPV';
+        document.getElementById('camStatus').style.color='';
+        const ins=document.getElementById('led-insitu');
+        ins.style.background='#555';ins.style.boxShadow='none';ins.classList.remove('led-red','led-cyan');
+        document.getElementById('insituStatus').style.color='#555';
+        document.querySelectorAll('.status-led').forEach(l=>l.classList.remove('led-red','led-cyan'));
+        document.getElementById('reticleLeft').classList.remove('alert');
+        document.getElementById('reticleRight').classList.remove('alert');
+        document.getElementById('stat1').classList.remove('red');
+        document.getElementById('sdmReadout').innerText='METRIC A: --';
+        document.getElementById('kcmReadout').innerText='METRIC B: --';
+        document.getElementById('codeStream').innerHTML='';
+    },
+
+    pushCode(threat){
+        const cs=document.getElementById('codeStream'),d=document.createElement('div');
+        if(threat){d.innerText="EXCEPTION: void *anomaly(0xFF) -- DEPLOY X-RAY";d.style.color="#ff3333";d.style.fontWeight="bold";}
+        else{d.innerText="[0x"+Math.random().toString(16).substring(2,8).toUpperCase()+"] "+this.cvLines[Math.floor(Math.random()*this.cvLines.length)];}
+        cs.appendChild(d);
+        if(cs.childNodes.length>12)cs.removeChild(cs.firstChild);
+    }
+};
+
+App.init();
+</script>
+</body>
+</html>
