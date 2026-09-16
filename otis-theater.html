@@ -11,20 +11,6 @@
             height: 100vh; overflow: hidden; display: flex; flex-direction: column;
             -webkit-user-select: none; user-select: none;
         }
-        #initScreen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; display: flex; flex-direction: column;
-            justify-content: center; align-items: center; z-index: 99999; gap: 30px;
-        }
-        #initScreen h1 { color: #ff3333; font-size: 1.6rem; letter-spacing: 3px; text-shadow: 0 0 20px rgba(255,51,51,0.6); }
-        #initScreen p  { color: #00ffcc; font-size: 0.75rem; letter-spacing: 4px; }
-        #startBtn {
-            padding: 18px 40px; font-size: 18px; font-family: 'Courier New', monospace; font-weight: bold;
-            color: #00ffcc; background: rgba(0,255,204,0.08); border: 2px solid #00ffcc;
-            box-shadow: 0 0 25px rgba(0,255,204,0.4); cursor: pointer; text-transform: uppercase;
-            letter-spacing: 2px; transition: all 0.2s;
-        }
-        #startBtn:hover { background: rgba(0,255,204,0.15); box-shadow: 0 0 40px rgba(0,255,204,0.6); }
 
         #header {
             display: none; justify-content: space-between; align-items: center;
@@ -253,12 +239,6 @@
     </style>
 </head>
 <body>
-
-<div id="initScreen">
-    <h1>O.T.I.S. // DOMAIN THEATER</h1>
-    <p>- SKYGUARD DEFENSE SYSTEMS -</p>
-    <button id="startBtn">INITIALIZE UPLINK</button>
-</div>
 
 <div id="header">
     <div>
@@ -590,15 +570,14 @@ const App = {
     ],
 
     init() {
-        document.getElementById('startBtn').onclick=()=>this.launch();
         setInterval(()=>{
             document.getElementById('sysTime').innerText='SYS: '+new Date().toTimeString().split(' ')[0];
         },1000);
         window.addEventListener('resize',()=>{layout();updateScrollArrow();});
+        this.launch();
     },
 
     launch() {
-        document.getElementById('initScreen').style.display='none';
         document.getElementById('header').style.display='flex';
         document.getElementById('domainBar').style.display='flex';
         document.getElementById('theater').style.display='block';
