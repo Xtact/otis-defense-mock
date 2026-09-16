@@ -358,15 +358,14 @@
 </div>
 
 <script>
-const VID_BASE = 'https://raw.githubusercontent.com/Xtact/insitu-defense-matrix/main/';
 const DOMAINS = {
-    'c-uas':     { main:VID_BASE+'insitu_poc.mp4',     xray:VID_BASE+'true_xray.mp4',      sobel:true,
+    'c-uas':     { main:'insitu_poc.mp4',     xray:'true_xray.mp4',      sobel:true,
                    label:'DOMAIN: C-UAS / FlyTrap',           fpv:'FPV RAW',     xrayLabel:'STRUCTURAL X-RAY'  },
-    'railcar':   { main:VID_BASE+'rail_true.mp4',      xray:VID_BASE+'rail_xray.mp4',      sobel:false,
+    'railcar':   { main:'rail_true.mp4',      xray:'rail_xray.mp4',      sobel:false,
                    label:'DOMAIN: Semi-Autonomous / Railroad', fpv:'FRONT CAM',   xrayLabel:'GEOMETRY VERIFY'   },
-    'maritime':  { main:VID_BASE+'maritime_true.mp4',  xray:VID_BASE+'maritime_xray.mp4',  sobel:false,
+    'maritime':  { main:'maritime_true.mp4',  xray:'maritime_xray.mp4',  sobel:false,
                    label:'DOMAIN: Maritime / Fog Navigation',  fpv:'VESSEL CAM',  xrayLabel:'STRUCTURE PROBE'   },
-    'intercept': { main:VID_BASE+'intercept_true.mp4', xray:VID_BASE+'intercept_xray.mp4', sobel:false,
+    'intercept': { main:'intercept_true.mp4', xray:'intercept_xray.mp4', sobel:false,
                    label:'DOMAIN: Hostile Drone Intercept',    fpv:'TRACK RAW',   xrayLabel:'INTERCEPT VECTOR'  }
 };
 
