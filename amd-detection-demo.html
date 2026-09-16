@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OTIS // AMD Successful Detection Sequence</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#000; overflow:hidden; height:100vh; width:100vw; font-family:'Courier New', monospace; }
+
+  :root {
+    --sg-bg-dark: #050b14;
+    --sg-bg-card: rgba(13,25,41,0.92);
+    --sg-gold: #FFD700;
+    --sg-blue: #00F0FF;
+    --sg-text-secondary: #CBD5E1;
+    --sg-text-tertiary: #94A3B8;
+    --sg-border: rgba(255,255,255,0.15);
+    --sg-red: #ff4444;
+    --sg-green: #00ffcc;
+  }
+
+  #stage {
+    position:relative; width:100vw; height:100vh; background:#050505; overflow:hidden;
+  }
+
+  #airCanvas { position:absolute; top:0; left:0; width:100%; height:100%; z-index:1; }
+
+  .grid-overlay {
+    position:absolute; top:0; left:0; width:100%; height:100%;
+    background-image: linear-gradient(rgba(0,240,255,0.05) 1px, transparent 1px),
+                       linear-gradient(90deg, rgba(0,240,255,0.05) 1px, transparent 1px);
+    background-size:44px 44px; pointer-events:none; z-index:2;
+  }
+
+  /* ── TOP STATUS STRIP ── */
+  #statusStrip {
+    position:absolute; top:16px; left:16px; z-index:20;
+    display:flex; gap:10px; font-size:0.68rem; letter-spacing:1px;
+  }
+  #statusStrip .chip {
+    background:rgba(0,0,0,0.75); border:1px solid var(--sg-border);
+    padding:5px 10px; border-radius:3px; color:var(--sg-text-secondary);
+    display:flex; align-items:center; gap:6px;
+  }
+  #statusStrip .dot { width:6px; height:6px; border-radius:50%; background:var(--sg-green); box-shadow:0 0 6px var(--sg-green); }
+  #statusStrip .dot.armed { background:var(--sg-blue); box-shadow:0 0 6px var(--sg-blue); }
+  #statusStrip .dot.busy { background:var(--sg-gold); box-shadow:0 0 6px var(--sg-gold); animation: blink 0.6s infinite; }
+  @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+
+  /* ── HEADER TITLE (top-right, subtle) ── */
+  #brandTag {
+    position:absolute; top:16px; right:16px; z-index:20;
+    font-size:0.6rem; letter-spacing:2px; color:var(--sg-text-tertiary);
+    text-align:right;
+  }
+  #brandTag b { color:var(--sg-gold); }
+
+  /* ── ON-SCREEN OVERLAY BANNER (bottom-center, per-shot text) ── */
+  #overlayBanner {
+    position:absolute; bottom:70px; left:50%; transform:translateX(-50%);
+    z-index:25; text-align:center; pointer-events:none;
+    background:rgba(0,0,0,0.72); border:1px solid var(--sg-border);
+    padding:10px 22px; border-radius:4px; min-width:340px;
+    transition: opacity 0.4s ease;
+  }
+  #overlayBanner .line1 { font-size:0.85rem; letter-spacing:1.5px; font-weight:bold; color:var(--sg-blue); }
+  #overlayBanner .line2 { font-size:0.6rem; letter-spacing:1px; color:var(--sg-text-tertiary); margin-top:3px; }
+  #overlayBanner.result-consistent .line1 { color:var(--sg-green); }
+  #overlayBanner.result-rejected  .line1 { color:var(--sg-red); }
+
+  /* ── CONTACT + BOUNDING BOX ── */
+  #contactDot {
+    position:absolute; width:8px; height:8px; border-radius:50%;
+    background:var(--sg-text-secondary); box-shadow:0 0 8px rgba(255,255,255,0.6);
+    z-index:10; display:none;
+  }
+  #bbox {
+    position:absolute; z-index:11; display:none;
+    border:1px solid #9aa5b1;
+    transition: border-color 0.5s ease, box-shadow 0.5s ease;
+  }
+  #bbox .bbox-label {
+    position:absolute; top:-22px; left:0;
+    font-size:0.62rem; letter-spacing:1px; font-weight:bold;
+    padding:2px 6px; border-radius:2px; white-space:nowrap;
+    background:rgba(0,0,0,0.8); color:#9aa5b1; border:1px solid #9aa5b1;
+    transition: color 0.4s ease, border-color 0.4s ease;
+  }
+  #bbox.verified { border-color: var(--sg-green); box-shadow:0 0 14px rgba(0,255,204,0.5); }
+  #bbox.verified .bbox-label { color:var(--sg-green); border-color:var(--sg-green); }
+  #bbox .corner {
+    position:absolute; width:12px; height:12px; border-color:inherit; opacity:0;
+  }
+
+  /* ── SCANNING RING (Shot 3: geometry check in progress) ── */
+  #scanRing {
+    position:absolute; z-index:9; display:none;
+    border:1px dashed rgba(0,240,255,0.5); border-radius:50%;
+    animation: spin 3s linear infinite;
+  }
+  @keyframes spin { from{transform:rotate(0deg);} to{transform:rotate(360deg);} }
+
+  /* ── FLOW BAR (Shot 5) ── */
+  #flowBar {
+    position:absolute; bottom:16px; left:50%; transform:translateX(-50%);
+    z-index:20; display:none; gap:10px; align-items:center;
+  }
+  .flow-box {
+    background:rgba(5,11,20,0.9); border:1px solid var(--sg-border);
+    color:var(--sg-text-tertiary); font-size:0.62rem; letter-spacing:1px;
+    padding:10px 16px; border-radius:4px; text-align:center; min-width:120px;
+    transition: all 0.5s ease;
+  }
+  .flow-box.lit {
+    border-color: var(--sg-blue); color:#fff;
+    box-shadow:0 0 16px rgba(0,240,255,0.5);
+    background: rgba(0,240,255,0.08);
+  }
+  .flow-arrow { color:var(--sg-text-tertiary); font-size:0.9rem; }
+  .flow-arrow.lit { color:var(--sg-blue); }
+
+  /* ── EVIDENCE RECORD (Shot 6) — SkyGuard brand, reused component ── */
+  #evidenceRecord {
+    display:none;
+    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+    width:320px; background:var(--sg-bg-card); border:1px solid var(--sg-border);
+    border-radius:8px; padding:16px 18px; z-index:30;
+    font-family:'Inter','Courier New',monospace;
+    box-shadow:0 10px 30px rgba(0,0,0,0.6); backdrop-filter: blur(8px);
+  }
+  #evidenceRecord::before {
+    content:""; position:absolute; left:0; top:0; bottom:0; width:4px;
+    background: var(--sg-blue); border-radius:8px 0 0 8px;
+  }
+  .er-head { display:flex; justify-content:space-between; font-size:0.6rem; color:var(--sg-text-tertiary); letter-spacing:1px; margin-bottom:6px; }
+  .er-result { font-size:1.1rem; font-weight:700; color:var(--sg-blue); margin-bottom:10px; }
+  .er-checks { list-style:none; display:flex; flex-direction:column; gap:5px; margin-bottom:8px; }
+  .er-checks li { display:flex; justify-content:space-between; font-size:0.68rem; color:var(--sg-text-secondary); background:rgba(255,255,255,0.05); padding:5px 9px; border-radius:3px; }
+  .er-pass { color: var(--sg-blue); font-weight:700; }
+  .er-footer { display:flex; justify-content:space-between; font-size:0.55rem; color:var(--sg-text-tertiary); border-top:1px solid var(--sg-border); padding-top:8px; letter-spacing:0.5px; }
+  .er-badge { background:rgba(255,255,255,0.07); border:1px solid var(--sg-border); border-radius:3px; padding:2px 6px; color:var(--sg-gold); }
+
+  /* ── CLOSING TAGLINE (Shot 7) ── */
+  #closingTag {
+    position:absolute; bottom:70px; left:50%; transform:translateX(-50%);
+    z-index:25; font-size:1.1rem; letter-spacing:3px; color:var(--sg-gold);
+    text-shadow:0 0 12px rgba(255,215,0,0.5); display:none; font-weight:bold;
+  }
+</style>
+</head>
+<body>
+
+<div id="stage">
+  <canvas id="airCanvas"></canvas>
+  <div class="grid-overlay"></div>
+
+  <div id="statusStrip">
+    <div class="chip"><span class="dot" id="dot-eo"></span><span id="txt-eo">EO/IR ONLINE</span></div>
+    <div class="chip"><span class="dot armed" id="dot-layer"></span><span id="txt-layer">OTIS LAYER 1: ARMED</span></div>
+  </div>
+
+  <div id="brandTag">SKYGUARD DEFENSE<br><b>OTIS</b> // AMD DETECTION SEQUENCE</div>
+
+  <div id="scanRing"></div>
+  <div id="bbox"><span class="bbox-label" id="bboxLabel">UNVERIFIED</span></div>
+  <div id="contactDot"></div>
+
+  <div id="overlayBanner">
+    <div class="line1" id="bannerLine1">OTIS LAYER 1 — STANDBY</div>
+    <div class="line2" id="bannerLine2"></div>
+  </div>
+
+  <div id="flowBar">
+    <div class="flow-box" id="flow-otis">OTIS<br>LAYER 1</div>
+    <div class="flow-arrow" id="arrow-1">&#x25B6;</div>
+    <div class="flow-box" id="flow-fusion">AI/ML +<br>FUSION</div>
+    <div class="flow-arrow" id="arrow-2">&#x25B6;</div>
+    <div class="flow-box" id="flow-c2">C2 /<br>ENGAGEMENT SUPPORT</div>
+  </div>
+
+  <div id="evidenceRecord">
+    <div class="er-head"><span id="er-trackid">TRACK OT-0512</span><span id="er-time">--:--:--</span></div>
+    <div class="er-result">CONSISTENT</div>
+    <ul class="er-checks">
+      <li><span>Scale vs. range</span><span class="er-pass">PASS</span></li>
+      <li><span>Motion vector continuity</span><span class="er-pass">PASS</span></li>
+      <li><span>Perspective / parallax fit</span><span class="er-pass">PASS</span></li>
+      <li><span>Kinematic plausibility</span><span class="er-pass">PASS</span></li>
+    </ul>
+    <div class="er-footer"><span>SENSOR: EO/IR-01</span><span class="er-badge">PASSED &rarr; FUSION</span></div>
+  </div>
+
+  <div id="closingTag">OTIS — PHYSICS BEFORE TRUST</div>
+</div>
+
+<script>
+const T = { s1:0, s2:8, s3:18, s4:32, s5:42, s6:58, s7:70, END:82 };
+
+const canvas = document.getElementById('airCanvas');
+const ctx = canvas.getContext('2d');
+function resize(){ canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+window.addEventListener('resize', resize); resize();
+
+const bbox = document.getElementById('bbox');
+const bboxLabel = document.getElementById('bboxLabel');
+const dotEl = document.getElementById('contactDot');
+const scanRing = document.getElementById('scanRing');
+const banner = document.getElementById('overlayBanner');
+const bannerL1 = document.getElementById('bannerLine1');
+const bannerL2 = document.getElementById('bannerLine2');
+const flowBar = document.getElementById('flowBar');
+const flowOtis = document.getElementById('flow-otis');
+const flowFusion = document.getElementById('flow-fusion');
+const flowC2 = document.getElementById('flow-c2');
+const arrow1 = document.getElementById('arrow-1');
+const arrow2 = document.getElementById('arrow-2');
+const evidenceRecord = document.getElementById('evidenceRecord');
+const closingTag = document.getElementById('closingTag');
+const dotLayer = document.getElementById('dot-layer');
+const txtLayer = document.getElementById('txt-layer');
+
+function contactPos(p){
+  const cx = window.innerWidth, cy = window.innerHeight;
+  const startX = -40, endX = cx*0.56;
+  const startY = cy*0.62, endY = cy*0.42;
+  const ease = p<1 ? 1-Math.pow(1-p,3) : 1;
+  return { x: startX + (endX-startX)*ease, y: startY + (endY-startY)*ease };
+}
+
+function setBanner(l1, l2, cls){
+  bannerL1.textContent = l1;
+  bannerL2.textContent = l2 || '';
+  banner.className = cls || '';
+  banner.style.opacity = '0';
+  requestAnimationFrame(()=>{ banner.style.opacity = '1'; });
+}
+
+function drawGridPulse(t){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  const cx = canvas.width*0.5, cy = canvas.height*0.5;
+  const r = Math.max(canvas.width,canvas.height);
+  const angle = (t*0.4) % (Math.PI*2);
+  ctx.save();
+  ctx.translate(cx,cy);
+  ctx.rotate(angle);
+  ctx.beginPath();
+  ctx.moveTo(0,0);
+  ctx.arc(0,0,r,0,0.3);
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(0,240,255,0.03)';
+  ctx.fill();
+  ctx.restore();
+}
+
+let startTime = null;
+let lastShot = -1;
+
+function frame(now){
+  if (startTime === null) startTime = now;
+  let t = (now - startTime) / 1000;
+  if (t > T.END) { startTime = now; t = 0; lastShot = -1; }
+
+  drawGridPulse(t);
+
+  if (t >= T.s1 && t < T.s2) {
+    if (lastShot !== 1) {
+      lastShot = 1;
+      dotEl.style.display = 'none';
+      bbox.style.display = 'none';
+      scanRing.style.display = 'none';
+      flowBar.style.display = 'none';
+      evidenceRecord.style.display = 'none';
+      closingTag.style.display = 'none';
+      dotLayer.className = 'dot armed';
+      txtLayer.textContent = 'OTIS LAYER 1: ARMED';
+      setBanner('OTIS LAYER 1 — STANDBY', 'AIRSPACE CLEAR // AWAITING CONTACT');
+    }
+  }
+
+  else if (t >= T.s2 && t < T.s3) {
+    if (lastShot !== 2) {
+      lastShot = 2;
+      dotEl.style.display = 'block';
+      bbox.style.display = 'block';
+      bbox.classList.remove('verified');
+      bboxLabel.textContent = 'UNVERIFIED';
+      setBanner('RAW SENSOR CONTACT DETECTED', 'AWAITING VERIFICATION');
+      dotLayer.className = 'dot busy';
+      txtLayer.textContent = 'OTIS LAYER 1: EVALUATING';
+    }
+    const p = (t - T.s2) / (T.s4 - T.s2);
+    const pos = contactPos(Math.min(p,1));
+    dotEl.style.left = pos.x + 'px'; dotEl.style.top = pos.y + 'px';
+    const bw = 70, bh = 70;
+    bbox.style.left = (pos.x - bw/2 + 4) + 'px';
+    bbox.style.top  = (pos.y - bh/2 + 4) + 'px';
+    bbox.style.width = bw + 'px'; bbox.style.height = bh + 'px';
+  }
+
+  else if (t >= T.s3 && t < T.s4) {
+    if (lastShot !== 3) {
+      lastShot = 3;
+      scanRing.style.display = 'block';
+      setBanner('OTIS LAYER 1 — CHECKING PHYSICAL PLAUSIBILITY', 'SCALE · MOTION · PERSPECTIVE · KINEMATICS');
+    }
+    const p = (t - T.s2) / (T.s4 - T.s2);
+    const pos = contactPos(Math.min(p,1));
+    dotEl.style.left = pos.x + 'px'; dotEl.style.top = pos.y + 'px';
+    const bw = 70, bh = 70;
+    bbox.style.left = (pos.x - bw/2 + 4) + 'px';
+    bbox.style.top  = (pos.y - bh/2 + 4) + 'px';
+    bbox.style.width = bw + 'px'; bbox.style.height = bh + 'px';
+    const ringSize = 110;
+    scanRing.style.width = ringSize+'px'; scanRing.style.height = ringSize+'px';
+    scanRing.style.left = (pos.x - ringSize/2 + 4) + 'px';
+    scanRing.style.top  = (pos.y - ringSize/2 + 4) + 'px';
+  }
+
+  else if (t >= T.s4 && t < T.s5) {
+    if (lastShot !== 4) {
+      lastShot = 4;
+      scanRing.style.display = 'none';
+      bbox.classList.add('verified');
+      bboxLabel.textContent = 'CONSISTENT';
+      setBanner('RESULT: CONSISTENT', 'TARGET VERIFIED REAL', 'result-consistent');
+      dotLayer.className = 'dot';
+      txtLayer.textContent = 'OTIS LAYER 1: CONFIRMED';
+    }
+    const pos = contactPos(1);
+    dotEl.style.left = pos.x + 'px'; dotEl.style.top = pos.y + 'px';
+    const bw = 70, bh = 70;
+    bbox.style.left = (pos.x - bw/2 + 4) + 'px';
+    bbox.style.top  = (pos.y - bh/2 + 4) + 'px';
+  }
+
+  else if (t >= T.s5 && t < T.s6) {
+    if (lastShot !== 5) {
+      lastShot = 5;
+      flowBar.style.display = 'flex';
+      flowOtis.classList.add('lit');
+      flowFusion.classList.remove('lit');
+      flowC2.classList.remove('lit');
+      arrow1.classList.remove('lit'); arrow2.classList.remove('lit');
+      setBanner('CONFIRMED TARGET \u2192 PASSED TO FUSION \u2192 ENGAGEMENT SUPPORT', '');
+    }
+    const seg = (t - T.s5) / (T.s6 - T.s5);
+    if (seg > 0.32 && !arrow1.classList.contains('lit')) { arrow1.classList.add('lit'); flowFusion.classList.add('lit'); }
+    if (seg > 0.66 && !arrow2.classList.contains('lit')) { arrow2.classList.add('lit'); flowC2.classList.add('lit'); }
+  }
+
+  else if (t >= T.s6 && t < T.s7) {
+    if (lastShot !== 6) {
+      lastShot = 6;
+      evidenceRecord.style.display = 'block';
+      document.getElementById('er-time').textContent = new Date().toTimeString().split(' ')[0];
+      setBanner('AUDITABLE EVIDENCE RECORD', 'NOT A BLACK BOX');
+    }
+  }
+
+  else if (t >= T.s7 && t < T.END) {
+    if (lastShot !== 7) {
+      lastShot = 7;
+      evidenceRecord.style.display = 'none';
+      flowBar.style.display = 'none';
+      bbox.classList.remove('verified');
+      bboxLabel.textContent = 'CONSISTENT';
+      banner.style.opacity = '0';
+      closingTag.style.display = 'block';
+      dotLayer.className = 'dot armed';
+      txtLayer.textContent = 'OTIS LAYER 1: ARMED';
+    }
+    const pos = contactPos(1);
+    dotEl.style.left = pos.x + 'px'; dotEl.style.top = pos.y + 'px';
+    const bw = 70, bh = 70;
+    bbox.style.left = (pos.x - bw/2 + 4) + 'px';
+    bbox.style.top  = (pos.y - bh/2 + 4) + 'px';
+  }
+
+  requestAnimationFrame(frame);
+}
+
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
