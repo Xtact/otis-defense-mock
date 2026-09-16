@@ -26,7 +26,6 @@
         }
         #startBtn:hover { background: rgba(0,255,204,0.15); box-shadow: 0 0 40px rgba(0,255,204,0.6); }
 
-        /* ── HEADER — compact ── */
         #header {
             display: none; justify-content: space-between; align-items: center;
             padding: 5px 14px; border-bottom: 1px solid #1a332d; background: #050505; z-index: 50;
@@ -35,7 +34,6 @@
         #header .tagline { color: #00ffcc; font-size: 0.52rem; letter-spacing: 2px; opacity: 0.6; margin-top: 1px; }
         .sys-time { font-size: 0.58rem; color: #00ffcc; opacity: 0.5; }
 
-        /* ── DOMAIN BAR ── */
         #domainBar {
             display: none; align-items: center; gap: 6px;
             border-bottom: 1px solid #1a332d; background: #030303;
@@ -45,7 +43,6 @@
         }
         #domainBar::-webkit-scrollbar { display: none; }
 
-        /* ── CAROUSEL TABS — orange theme ── */
         .domain-tab {
             padding: 9px 18px;
             font-size: 0.70rem;
@@ -99,7 +96,6 @@
             50%       { opacity: 0.5; box-shadow: 0 0 3px rgba(255,51,51,0.3);  }
         }
 
-        /* ── SCROLL ARROW ── */
         #scrollArrow {
             display: none;
             align-items: center; justify-content: center;
@@ -193,11 +189,6 @@
         .status-dot { width:6px; height:6px; border-radius:50%; background:#00ffcc; box-shadow:0 0 5px #00ffcc; }
         .status-dot.red { background:#ff3333; box-shadow:0 0 5px #ff3333; }
 
-        /* ═════════════════════════════════════════════════════════════
-           OTIS EVIDENCE RECORD — SkyGuard brand overlay
-           Colors match skyguarddefense.com exactly (not the award
-           tracker's palette): navy bg, gold + cyan accents.
-           ═════════════════════════════════════════════════════════════ */
         :root {
             --sg-bg-dark: #050b14;
             --sg-bg-card: rgba(13,25,41,0.92);
@@ -269,7 +260,6 @@
     <button id="startBtn">INITIALIZE UPLINK</button>
 </div>
 
-<!-- HEADER — compact, no spelled-out subtitle -->
 <div id="header">
     <div>
         <h1>O.T.I.S. // DOMAIN THEATER</h1>
@@ -278,7 +268,6 @@
     <div class="sys-time" id="sysTime">SYS: --:--:--</div>
 </div>
 
-<!-- DOMAIN TABS + SCROLL ARROW -->
 <div id="domainBar">
     <button class="domain-tab active" onclick="App.setDomain('c-uas',this)">C-UAS / FlyTrap</button>
     <button class="domain-tab" onclick="App.setDomain('railcar',this)">Semi-Auto / Rail</button>
@@ -287,11 +276,9 @@
     <div id="scrollArrow"><span>&#x25B6;</span></div>
 </div>
 
-<!-- THEATER -->
 <div id="theater">
     <div class="split-container">
 
-        <!-- LEFT: RAW FEED -->
         <div class="video-pane" id="leftPane">
             <video id="mainVideo" playsinline webkit-playsinline muted loop preload="auto"></video>
             <div class="grid-overlay"></div>
@@ -314,7 +301,6 @@
             <div id="codeStream"></div>
         </div>
 
-        <!-- RIGHT: X-RAY / PROCESSED FEED -->
         <div class="video-pane" id="rightPane">
             <video id="xrayVideo" playsinline webkit-playsinline muted loop preload="auto"
                    style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;z-index:1;"></video>
@@ -335,7 +321,6 @@
                 </div>
             </div>
 
-            <!-- ══════════════ OTIS EVIDENCE RECORD (SkyGuard brand) ══════════════ -->
             <div id="evidenceRecord" data-result="CONSISTENT">
                 <div class="er-head">
                     <span id="er-trackid">TRACK OT-0000</span>
@@ -364,7 +349,6 @@
     </div>
 </div>
 
-<!-- STATUS BAR -->
 <div id="statusBar" style="display:none;background:#030303;border-top:1px solid #1a332d;
      padding:5px 20px;flex-shrink:0;justify-content:space-between;align-items:center;font-size:0.6rem;">
     <div class="status-segment"><div class="status-dot" id="stat1"></div><span>OTIS PIPELINE: ACTIVE</span></div>
@@ -374,17 +358,15 @@
 </div>
 
 <script>
-// ════════════════════════════════════════════
-// DOMAIN CONFIG
-// ════════════════════════════════════════════
+const VID_BASE = 'https://raw.githubusercontent.com/Xtact/insitu-defense-matrix/main/';
 const DOMAINS = {
-    'c-uas':     { main:'insitu_poc.mp4',     xray:'true_xray.mp4',      sobel:true,
+    'c-uas':     { main:VID_BASE+'insitu_poc.mp4',     xray:VID_BASE+'true_xray.mp4',      sobel:true,
                    label:'DOMAIN: C-UAS / FlyTrap',           fpv:'FPV RAW',     xrayLabel:'STRUCTURAL X-RAY'  },
-    'railcar':   { main:'rail_true.mp4',      xray:'rail_xray.mp4',      sobel:false,
+    'railcar':   { main:VID_BASE+'rail_true.mp4',      xray:VID_BASE+'rail_xray.mp4',      sobel:false,
                    label:'DOMAIN: Semi-Autonomous / Railroad', fpv:'FRONT CAM',   xrayLabel:'GEOMETRY VERIFY'   },
-    'maritime':  { main:'maritime_true.mp4',  xray:'maritime_xray.mp4',  sobel:false,
+    'maritime':  { main:VID_BASE+'maritime_true.mp4',  xray:VID_BASE+'maritime_xray.mp4',  sobel:false,
                    label:'DOMAIN: Maritime / Fog Navigation',  fpv:'VESSEL CAM',  xrayLabel:'STRUCTURE PROBE'   },
-    'intercept': { main:'intercept_true.mp4', xray:'intercept_xray.mp4', sobel:false,
+    'intercept': { main:VID_BASE+'intercept_true.mp4', xray:VID_BASE+'intercept_xray.mp4', sobel:false,
                    label:'DOMAIN: Hostile Drone Intercept',    fpv:'TRACK RAW',   xrayLabel:'INTERCEPT VECTOR'  }
 };
 
@@ -401,9 +383,6 @@ const TGT = {
     'intercept': 'TGT: UAV TARGETED'
 };
 
-// ════════════════════════════════════════════
-// SCROLL ARROW VISIBILITY
-// ════════════════════════════════════════════
 function updateScrollArrow() {
     const bar = document.getElementById('domainBar');
     const arrow = document.getElementById('scrollArrow');
@@ -413,9 +392,6 @@ function updateScrollArrow() {
     arrow.style.display = (overflowing && !atEnd) ? 'flex' : 'none';
 }
 
-// ════════════════════════════════════════════
-// SOBEL ENGINE
-// ════════════════════════════════════════════
 const Sobel = {
     gl:null, prog:null, tex:null, ok:false,
     sens:1.5, contrast:1.0, gate:0.0, inv:0,
@@ -474,9 +450,6 @@ const Sobel = {
     }
 };
 
-// ════════════════════════════════════════════
-// INTERCEPT OVERLAY
-// ════════════════════════════════════════════
 const Overlay = {
     active:false, trail:[], lockProg:0, locked:false,
 
@@ -564,12 +537,6 @@ const Overlay = {
     reset(){this.active=false;this.trail=[];this.lockProg=0;this.locked=false;}
 };
 
-// ════════════════════════════════════════════
-// OTIS EVIDENCE RECORD — SkyGuard-branded HUD panel
-// Populated at t>=3.5s (intercept trigger) alongside
-// the existing alarm/status sequence. Uses CONSISTENT/
-// REJECTED wording consistent with the pitch deck.
-// ════════════════════════════════════════════
 const EvidenceRecord = {
     show(domain, t) {
         const el = document.getElementById('evidenceRecord');
@@ -592,9 +559,6 @@ const EvidenceRecord = {
     }
 };
 
-// ════════════════════════════════════════════
-// LAYOUT
-// ════════════════════════════════════════════
 function layout() {
     const pane=document.getElementById('rightPane');
     const vid=document.getElementById('xrayVideo');
@@ -613,9 +577,6 @@ function layout() {
     updateScrollArrow();
 }
 
-// ════════════════════════════════════════════
-// APP
-// ════════════════════════════════════════════
 const App = {
     domain:'c-uas',
     f1:false,f2:false,f3:false,f4:false,
