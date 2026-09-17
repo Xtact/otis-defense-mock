@@ -1,1 +1,266 @@
-REAL_CONTENT_WITH_EMBEDDED_FLAG_IMAGE
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OTIS // Mesh Convergence Sequence</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#000; overflow:hidden; height:100vh; width:100vw; font-family:'Courier New', monospace; }
+  :root { --sg-gold:#FFD700; --sg-blue:#00F0FF; --sg-green:#39FF88; --sg-text-secondary:#CBD5E1; --sg-text-tertiary:#94A3B8; --sg-border:rgba(255,255,255,0.15); }
+  #stage { position:relative; width:100vw; height:100vh; background:#000; overflow:hidden; }
+  #bgCanvas { position:absolute; top:0; left:0; width:100%; height:100%; z-index:1; }
+  #lineCanvas { position:absolute; top:0; left:0; width:100%; height:100%; z-index:15; pointer-events:none; }
+  .grid-overlay { position:absolute; top:0; left:0; width:100%; height:100%; background-image:linear-gradient(rgba(0,240,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(0,240,255,0.04) 1px, transparent 1px); background-size:46px 46px; pointer-events:none; z-index:2; opacity:0; transition:opacity 1.5s ease; }
+  .grid-overlay.on { opacity:1; }
+  #coldOpen { position:absolute; top:0; left:0; width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:30; text-align:center; gap:10px; }
+  #coLogo { opacity:0; transition:opacity 1.4s ease; font-size:2.6rem; font-weight:bold; letter-spacing:8px; color:var(--sg-gold); text-shadow:0 0 22px rgba(255,215,0,0.55); position:relative; z-index:1; }
+  #coLogo.show { opacity:1; }
+  #coLogo .sub { display:block; font-size:0.75rem; letter-spacing:5px; color:var(--sg-text-tertiary); font-weight:normal; margin-top:8px; text-shadow:none; }
+  #coTagline { opacity:0; transition:opacity 1.4s ease; font-size:1.15rem; letter-spacing:2px; color:var(--sg-blue); text-shadow:0 0 14px rgba(0,240,255,0.5); font-weight:bold; margin-top:20px; position:relative; z-index:1; }
+  #coTagline.show { opacity:1; }
+  #coFooter { position:absolute; bottom:36px; left:50%; transform:translate(-50%,0); display:flex; flex-direction:column; align-items:center; gap:6px; opacity:0; transition:opacity 1.6s ease; z-index:31; }
+  #coFooter.show { opacity:1; }
+  #coFooter img { width:64px; filter:grayscale(1) brightness(0.95) contrast(1.05); opacity:0.85; }
+  #coFooter .loc { font-size:0.62rem; letter-spacing:3px; color:var(--sg-text-tertiary); }
+  #nodeStage { position:absolute; top:0; left:0; width:100%; height:100%; z-index:20; display:none; }
+  .node-wrap { position:absolute; display:flex; flex-direction:column; align-items:center; opacity:0; transition:opacity 0.6s ease; }
+  .node-wrap.show { opacity:1; }
+  .node-icon-box { width:110px; height:110px; position:relative; display:flex; align-items:center; justify-content:center; }
+  .node-icon-box canvas { position:absolute; top:0; left:0; }
+  .node-ring { position:absolute; top:50%; left:50%; width:70px; height:70px; margin:-35px 0 0 -35px; border:2px solid var(--sg-blue); border-radius:50%; opacity:0; box-shadow:0 0 0 rgba(0,240,255,0); transition:opacity 0.4s ease; }
+  .node-ring.show { opacity:1; animation:ringpulse 1.6s ease-in-out infinite; }
+  @keyframes ringpulse { 0%,100%{ box-shadow:0 0 6px rgba(0,240,255,0.5); } 50%{ box-shadow:0 0 22px rgba(0,240,255,0.95); } }
+  .node-verdict { margin-top:10px; display:flex; align-items:center; gap:7px; padding:4px 12px; border:1px solid var(--sg-border); border-radius:999px; background:rgba(0,0,0,0.6); opacity:0; transition:opacity 0.5s ease; }
+  .node-verdict.show { opacity:1; }
+  .node-verdict .dot { width:6px; height:6px; border-radius:50%; background:var(--sg-green); box-shadow:0 0 8px var(--sg-green); animation:pulse 1.4s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
+  .node-verdict span.txt { font-size:0.62rem; letter-spacing:2px; color:var(--sg-green); font-weight:bold; }
+  #centerTrack { position:absolute; top:45%; left:50%; transform:translate(-50%,-50%); width:60px; height:60px; z-index:22; opacity:0; transition:opacity 0.6s ease; }
+  #centerTrack.show { opacity:1; }
+  #centerTrack .tcorner { position:absolute; width:14px; height:14px; border-color:var(--sg-text-tertiary); transition:border-color 0.6s ease; }
+  #centerTrack.locked .tcorner { border-color:var(--sg-green); }
+  #centerTrack .ttl { top:0; left:0; border-top:2px solid; border-left:2px solid; }
+  #centerTrack .ttr { top:0; right:0; border-top:2px solid; border-right:2px solid; }
+  #centerTrack .tbl { bottom:0; left:0; border-bottom:2px solid; border-left:2px solid; }
+  #centerTrack .tbr { bottom:0; right:0; border-bottom:2px solid; border-right:2px solid; }
+  #convergeMsg { position:absolute; top:63%; left:50%; transform:translate(-50%,0); z-index:35; text-align:center; opacity:0; transition:opacity 1s ease; width:90%; }
+  #convergeMsg.show { opacity:1; }
+  #convergeMsg .l1 { font-size:1.05rem; letter-spacing:2px; font-weight:bold; color:var(--sg-green); text-shadow:0 0 16px rgba(57,255,136,0.6); }
+  #convergeMsg .l2 { margin-top:6px; font-size:0.65rem; letter-spacing:1.5px; color:var(--sg-text-tertiary); }
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="bgCanvas"></canvas>
+  <canvas id="lineCanvas"></canvas>
+  <div class="grid-overlay" id="gridOverlay"></div>
+  <div id="coldOpen">
+    <div id="coLogo">O.T.I.S.<span class="sub">SKYGUARD LABS</span></div>
+    <div id="coTagline">APPEARANCE IS NEGOTIABLE. GEOMETRY IS NOT.</div>
+  </div>
+  <div id="coFooter">
+    <img src="data:image/jpeg;base64,PLACEHOLDER_FLAG_B64" alt="">
+    <div class="loc">COLORADO | USA</div>
+  </div>
+  <div id="nodeStage">
+    <div class="node-wrap" id="node-space">
+      <div class="node-icon-box"><canvas width="110" height="110" id="icon-space"></canvas>
+        <div class="node-ring"></div>
+      </div>
+      <div class="node-verdict"><span class="dot"></span><span class="txt">CONSISTENT</span></div>
+    </div>
+    <div class="node-wrap" id="node-ground">
+      <div class="node-icon-box"><canvas width="110" height="110" id="icon-ground"></canvas>
+        <div class="node-ring"></div>
+      </div>
+      <div class="node-verdict"><span class="dot"></span><span class="txt">CONSISTENT</span></div>
+    </div>
+    <div class="node-wrap" id="node-air">
+      <div class="node-icon-box"><canvas width="110" height="110" id="icon-air"></canvas>
+        <div class="node-ring"></div>
+      </div>
+      <div class="node-verdict"><span class="dot"></span><span class="txt">CONSISTENT</span></div>
+    </div>
+    <div id="centerTrack">
+      <div class="tcorner ttl"></div><div class="tcorner ttr"></div><div class="tcorner tbl"></div><div class="tcorner tbr"></div>
+    </div>
+    <div id="convergeMsg">
+      <div class="l1">INDEPENDENTLY VERIFIED &mdash; MULTI-NODE GEOMETRY CONSISTENT</div>
+      <div class="l2">SPACE &middot; GROUND &middot; AIR &mdash; THREE SEPARATE VERDICTS, ONE CONCLUSION</div>
+    </div>
+  </div>
+</div>
+<script>
+const bgCanvas = document.getElementById('bgCanvas');
+const bgCtx = bgCanvas.getContext('2d');
+const lineCanvas = document.getElementById('lineCanvas');
+const lineCtx = lineCanvas.getContext('2d');
+function resizeCanvases(){
+  bgCanvas.width = window.innerWidth; bgCanvas.height = window.innerHeight;
+  lineCanvas.width = window.innerWidth; lineCanvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resizeCanvases); resizeCanvases();
+
+function starfield(t){
+  bgCtx.fillStyle = '#000'; bgCtx.fillRect(0,0,bgCanvas.width,bgCanvas.height);
+  for(let i=0;i<140;i++){
+    const sx = (Math.sin(i*12.9898)*43758.5453) % 1;
+    const sy = (Math.sin(i*78.233)*12345.678) % 1;
+    const x = Math.abs(sx) * bgCanvas.width;
+    const y = Math.abs(sy) * bgCanvas.height;
+    const tw = 0.5 + 0.5*Math.sin(t*1.5 + i);
+    bgCtx.globalAlpha = 0.15 + 0.35*tw;
+    bgCtx.fillStyle = '#CBD5E1';
+    bgCtx.fillRect(x, y, 1.4, 1.4);
+  }
+  bgCtx.globalAlpha = 1;
+}
+
+function drawSatellite(ctx, p){
+  ctx.clearRect(0,0,110,110); ctx.save(); ctx.translate(55,55);
+  ctx.strokeStyle = 'rgba(0,240,255,' + p + ')'; ctx.lineWidth = 1.6; ctx.shadowColor = '#00F0FF'; ctx.shadowBlur = 10*p;
+  ctx.strokeRect(-9,-7,18,14);
+  const panelW = 22*p;
+  ctx.strokeRect(-9-panelW-4, -5, panelW, 10); ctx.strokeRect(9+4, -5, panelW, 10);
+  ctx.beginPath(); ctx.moveTo(0,-7); ctx.lineTo(0,-7-12*p); ctx.stroke();
+  ctx.beginPath(); ctx.arc(0,-7-12*p, 2, 0, Math.PI*2); ctx.stroke();
+  ctx.restore();
+}
+function drawGroundTower(ctx, p){
+  ctx.clearRect(0,0,110,110); ctx.save(); ctx.translate(55,62);
+  ctx.strokeStyle = 'rgba(0,240,255,' + p + ')'; ctx.lineWidth = 1.6; ctx.shadowColor = '#00F0FF'; ctx.shadowBlur = 10*p;
+  ctx.beginPath(); ctx.moveTo(-13,18); ctx.lineTo(0,-18*p); ctx.lineTo(13,18); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(-7,18); ctx.lineTo(7,18); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(-4,3); ctx.lineTo(4,3); ctx.stroke();
+  ctx.beginPath(); ctx.arc(0,-18*p, 7*p, Math.PI*0.15, Math.PI*1.15); ctx.stroke();
+  ctx.restore();
+}
+function drawAircraft(ctx, p){
+  ctx.clearRect(0,0,110,110); ctx.save(); ctx.translate(55,55);
+  ctx.strokeStyle = 'rgba(0,240,255,' + p + ')'; ctx.lineWidth = 1.6; ctx.shadowColor = '#00F0FF'; ctx.shadowBlur = 10*p;
+  ctx.beginPath(); ctx.moveTo(-22*p,0); ctx.lineTo(22*p,0); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(-4,0); ctx.lineTo(-13,-14*p); ctx.lineTo(-2,-2); ctx.closePath(); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(-4,0); ctx.lineTo(-13,14*p); ctx.lineTo(-2,2); ctx.closePath(); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(18,0); ctx.lineTo(22,-7*p); ctx.stroke();
+  ctx.restore();
+}
+const iconDrawers = { space:drawSatellite, ground:drawGroundTower, air:drawAircraft };
+
+const nodePositions = { space:{top:'16%',left:'50%'}, ground:{top:'70%',left:'22%'}, air:{top:'70%',left:'78%'} };
+function positionNode(id){ const el=document.getElementById('node-'+id); const pos=nodePositions[id]; el.style.top=pos.top; el.style.left=pos.left; el.style.transform='translate(-50%, -50%)'; }
+['space','ground','air'].forEach(positionNode);
+
+const centerPoint = { xr:0.5, yr:0.45 };
+
+const T = {
+  logo:2, tagline:5, footer:1, coldOpenEnd:10, gridOn:10,
+  nodeSpaceStart:11, nodeGroundStart:18, nodeAirStart:25,
+  convergeStart:32, convergeEnd:41, LOOP_END:44
+};
+
+function setShow(el,on){ if(!el) return; on ? el.classList.add('show') : el.classList.remove('show'); }
+
+let startTime = null;
+let nodeStageShown = { space:false, ground:false, air:false };
+let nodeLineProgress = { space:0, ground:0, air:0 };
+
+function resetAll(){
+  setShow(document.getElementById('coLogo'), false);
+  setShow(document.getElementById('coTagline'), false);
+  setShow(document.getElementById('coFooter'), false);
+  document.getElementById('gridOverlay').classList.remove('on');
+  document.getElementById('nodeStage').style.display = 'none';
+  document.getElementById('centerTrack').classList.remove('show','locked');
+  document.getElementById('convergeMsg').classList.remove('show');
+  ['space','ground','air'].forEach(id => {
+    const w = document.getElementById('node-'+id);
+    w.classList.remove('show');
+    w.querySelectorAll('.node-ring, .node-verdict').forEach(e => e.classList.remove('show'));
+    nodeStageShown[id] = false;
+    nodeLineProgress[id] = 0;
+  });
+  lineCtx.clearRect(0,0,lineCanvas.width,lineCanvas.height);
+}
+
+function getNodeCenterPx(id){
+  const el = document.getElementById('node-'+id);
+  const r = el.getBoundingClientRect();
+  return { x: r.left + r.width/2, y: r.top + r.height/2 + 18 };
+}
+
+function buildNode(id, t, startT){
+  const local = t - startT;
+  if (local < 0) return;
+  const w = document.getElementById('node-'+id);
+  if (!nodeStageShown[id]) { nodeStageShown[id] = true; w.classList.add('show'); }
+  const buildP = Math.min(1, local / 1.8);
+  iconDrawers[id](document.getElementById('icon-'+id).getContext('2d'), buildP);
+  if (local > 1.0) w.querySelector('.node-ring').classList.add('show');
+  if (local > 1.6) w.querySelector('.node-verdict').classList.add('show');
+  const lineP = Math.max(0, Math.min(1, (local - 1.8) / 2.2));
+  nodeLineProgress[id] = lineP;
+}
+
+function drawLines(){
+  lineCtx.clearRect(0,0,lineCanvas.width,lineCanvas.height);
+  const cx = centerPoint.xr * lineCanvas.width;
+  const cy = centerPoint.yr * lineCanvas.height;
+  ['space','ground','air'].forEach(id => {
+    const p = nodeLineProgress[id];
+    if (p <= 0) return;
+    const start = getNodeCenterPx(id);
+    const ex = start.x + (cx - start.x) * p;
+    const ey = start.y + (cy - start.y) * p;
+    lineCtx.beginPath();
+    lineCtx.moveTo(start.x, start.y);
+    lineCtx.lineTo(ex, ey);
+    lineCtx.strokeStyle = 'rgba(57,255,136,0.85)';
+    lineCtx.lineWidth = 1.4;
+    lineCtx.shadowColor = '#39FF88';
+    lineCtx.shadowBlur = 6;
+    lineCtx.stroke();
+  });
+}
+
+function frame(now){
+  if (startTime === null) startTime = now;
+  let t = (now - startTime) / 1000;
+  if (t > T.LOOP_END) { startTime = now; t = 0; resetAll(); }
+  starfield(t);
+
+  if (t < T.coldOpenEnd) {
+    setShow(document.getElementById('coLogo'), t >= T.logo);
+    setShow(document.getElementById('coTagline'), t >= T.tagline);
+    setShow(document.getElementById('coFooter'), t >= T.footer);
+  } else {
+    setShow(document.getElementById('coLogo'), false);
+    setShow(document.getElementById('coTagline'), false);
+    setShow(document.getElementById('coFooter'), false);
+  }
+
+  if (t >= T.gridOn) {
+    document.getElementById('gridOverlay').classList.add('on');
+    document.getElementById('nodeStage').style.display = 'block';
+    document.getElementById('centerTrack').classList.add('show');
+  }
+
+  if (t >= T.nodeSpaceStart) buildNode('space', t, T.nodeSpaceStart);
+  if (t >= T.nodeGroundStart) buildNode('ground', t, T.nodeGroundStart);
+  if (t >= T.nodeAirStart) buildNode('air', t, T.nodeAirStart);
+
+  if (t >= T.gridOn) drawLines();
+
+  if (t >= T.convergeStart && t < T.convergeEnd) {
+    document.getElementById('centerTrack').classList.add('locked');
+    document.getElementById('convergeMsg').classList.add('show');
+  } else if (t >= T.convergeEnd) {
+    document.getElementById('convergeMsg').classList.remove('show');
+  }
+
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
