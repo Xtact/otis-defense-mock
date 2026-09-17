@@ -21,6 +21,19 @@
     position:absolute; top:0; left:0; width:100%; height:100%; z-index:3; pointer-events:none;
     background: radial-gradient(ellipse at center, rgba(0,0,0,0) 40%, rgba(0,0,0,0.55) 100%);
   }
+  #transitionOverlay {
+    position:absolute; top:0; left:0; width:100%; height:100%; background:#060606;
+    opacity:0; z-index:200; pointer-events:none; transition: opacity 0.35s ease;
+  }
+
+  #titleAnchor {
+    position:absolute; top:14%; left:50%; transform:translateX(-50%);
+    width:88%; text-align:center; z-index:10;
+    font-family:'Courier New', monospace; font-weight:bold; color:#F0F0F0;
+    letter-spacing:3px; font-size:4.6rem; line-height:1.4; opacity:0;
+    text-shadow: 0 0 18px rgba(232,232,232,0.25); white-space:pre-wrap;
+  }
+  #titleAnchor.show { opacity:1; }
 
   .hud {
     position:absolute; font-family:'Courier New', monospace; font-weight:bold; color:#F0F0F0;
@@ -30,22 +43,9 @@
   .hud.show { opacity:1; }
   .hud.red { color:#FF3B30; text-shadow: 0 0 22px rgba(255,59,48,0.55); }
   .hud.green { color:#39FF88; text-shadow: 0 0 22px rgba(57,255,136,0.55); }
-  .hud.strike { text-decoration: line-through; color:#5A5A5A; text-shadow:none; }
   .hud.small { font-size:2.6rem; }
   .hud.tiny { font-size:2.1rem; }
-
-  #coldOpen {
-    position:absolute; top:0; left:0; width:100%; height:100%;
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
-    text-align:center; gap:40px; padding:0 5%; z-index:10;
-  }
-  .co-line {
-    font-family:'Courier New', monospace; font-weight:bold; color:#F0F0F0; letter-spacing:3px;
-    font-size:4.8rem; opacity:0; line-height:1.4; max-width:1500px;
-    text-shadow: 0 0 18px rgba(232,232,232,0.25);
-  }
-  .co-line.show { opacity:1; }
-  .co-line.strike { text-decoration:line-through; color:#FF3B30; opacity:1; text-shadow:0 0 22px rgba(255,59,48,0.5); }
+  .hud.micro { font-size:1.5rem; font-weight:600; letter-spacing:1px; color:#B7B7B7; text-shadow:none; }
 
   #logoCard { position:absolute; top:0; left:0; width:100%; height:100%; display:none;
     flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:34px; padding:0 5%; z-index:10; }
@@ -54,13 +54,13 @@
     color:#F0F0F0; position:relative; overflow:hidden; clip-path: inset(0 0 100% 0);
     text-shadow: 0 0 30px rgba(232,232,232,0.35);
   }
-  #logoWordmark.reveal { animation: scanReveal 2.6s steps(24) forwards; }
+  #logoWordmark.reveal { animation: scanReveal 1.3s steps(24) forwards; }
   @keyframes scanReveal { to { clip-path: inset(0 0 0% 0); } }
-  #logoSub { font-family:'Courier New', monospace; font-weight:bold; font-size:2.1rem; letter-spacing:3px; color:#C4C4C4; opacity:0; transition:opacity 1.6s ease; max-width:1150px; line-height:1.6; }
+  #logoSub { font-family:'Courier New', monospace; font-weight:bold; font-size:2.1rem; letter-spacing:3px; color:#C4C4C4; opacity:0; transition:opacity 0.6s ease; max-width:1150px; line-height:1.6; }
   #logoSub.show { opacity:1; }
   #logoFooter { position:absolute; bottom:48px; left:50%; transform:translateX(-50%);
     font-family:'Courier New', monospace; font-weight:bold; font-size:1.3rem; letter-spacing:3px; color:#909090;
-    opacity:0; transition:opacity 1.6s ease; text-align:center; }
+    opacity:0; transition:opacity 0.6s ease; text-align:center; }
   #logoFooter.show { opacity:1; }
 
   #liveScene { position:absolute; top:0; left:0; width:100%; height:100%; display:none; }
@@ -84,7 +84,7 @@
   #freezeText div { opacity:0; transition:opacity 1s ease; margin-bottom:34px; }
   #freezeText div.show { opacity:1; }
 
-  .stationLabel { text-align:center; width:520px; }
+  .stationLabel { text-align:center; width:620px; }
   .gateLine { position:absolute; top:50%; left:6%; width:88%; height:3px; background:#3A3A3A; z-index:4;
     box-shadow: 0 0 8px rgba(58,58,58,0.6); }
 
@@ -102,11 +102,7 @@
   <canvas id="bgCanvas"></canvas>
   <div class="grid-overlay"></div>
 
-  <div id="coldOpen">
-    <div class="co-line" id="co1">EVERY CAMERA.<br>EVERY RADAR.<br>EVERY GPS RECEIVER.</div>
-    <div class="co-line" id="co2">TRUSTS INPUTS<br>THE ADVERSARY<br>CONTROLS.</div>
-    <div class="co-line" id="co3" style="margin-top:30px;">OTIS DOESN'T.</div>
-  </div>
+  <div id="titleAnchor"></div>
 
   <div id="logoCard">
     <div id="logoWordmark">O.T.I.S.</div>
@@ -134,12 +130,13 @@
     <div id="freezeText"></div>
   </div>
   <div class="vignette"></div>
+  <div id="transitionOverlay"></div>
 </div>
 
 <script>
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-function typeOn(el, text, speed=130) {
+function typeOn(el, text, speed=90) {
   return new Promise(resolve => {
     el.innerHTML = '';
     el.classList.add('show');
@@ -154,6 +151,15 @@ function typeOn(el, text, speed=130) {
       if (i >= chars.length) { clearInterval(timer); resolve(); }
     }, speed);
   });
+}
+
+async function sceneTransition(ms=350){
+  const overlay = document.getElementById('transitionOverlay');
+  overlay.style.transition = `opacity ${ms}ms ease`;
+  overlay.style.opacity = '1';
+  await sleep(ms + 40);
+  overlay.style.opacity = '0';
+  await sleep(ms * 0.6);
 }
 
 async function showFreeze(lines, holdEach=6500, exitHold=2800, enterGap=1000) {
@@ -203,18 +209,25 @@ function sizeCanvases(){
 }
 window.addEventListener('resize', sizeCanvases); sizeCanvases();
 
-// ---- Realistic fiber-optic guided munition silhouette: slim fuselage,
-// nose cone, cruciform tail fins, and a trailing fiber-optic wire. ----
 function drawMunitionPath(ctx){
   ctx.beginPath();
-  ctx.moveTo(90, 0);
-  ctx.quadraticCurveTo(70, -9, 40, -9);
-  ctx.lineTo(-55, -9);
-  ctx.quadraticCurveTo(-65, -9, -65, 0);
-  ctx.quadraticCurveTo(-65, 9, -55, 9);
-  ctx.lineTo(40, 9);
-  ctx.quadraticCurveTo(70, 9, 90, 0);
+  ctx.moveTo(95, 0);
+  ctx.lineTo(52, -7);
+  ctx.lineTo(-48, -7);
+  ctx.quadraticCurveTo(-60, -7, -60, 0);
+  ctx.quadraticCurveTo(-60, 7, -48, 7);
+  ctx.lineTo(52, 7);
   ctx.closePath();
+}
+
+function drawFins(ctx, fillMode){
+  if (fillMode) ctx.fillStyle = '#565656';
+  ctx.beginPath();
+  ctx.moveTo(-38,-7); ctx.lineTo(-58,-26); ctx.lineTo(-46,-7);
+  ctx.closePath(); if (fillMode) ctx.fill(); else ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(-38,7); ctx.lineTo(-58,26); ctx.lineTo(-46,7);
+  ctx.closePath(); if (fillMode) ctx.fill(); else ctx.stroke();
 }
 
 function drawSolidObject(ctx, cx, cy, scale=1, alpha=1){
@@ -223,21 +236,7 @@ function drawSolidObject(ctx, cx, cy, scale=1, alpha=1){
   ctx.scale(scale, scale);
   ctx.globalAlpha = alpha;
 
-  ctx.strokeStyle = '#7A7A7A';
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(-65, 0);
-  for (let i=1;i<=10;i++){
-    const t = i/10;
-    ctx.lineTo(-65 - t*130, Math.sin(t*10)*4);
-  }
-  ctx.stroke();
-
-  ctx.fillStyle = '#5E5E5E';
-  ctx.beginPath();
-  ctx.moveTo(-45,-9); ctx.lineTo(-62,-30); ctx.lineTo(-38,-9); ctx.closePath(); ctx.fill();
-  ctx.beginPath();
-  ctx.moveTo(-45,9); ctx.lineTo(-62,30); ctx.lineTo(-38,9); ctx.closePath(); ctx.fill();
+  drawFins(ctx, true);
 
   ctx.fillStyle = '#6E6E6E';
   ctx.strokeStyle = '#A6A6A6';
@@ -245,10 +244,6 @@ function drawSolidObject(ctx, cx, cy, scale=1, alpha=1){
   drawMunitionPath(ctx);
   ctx.fill();
   ctx.stroke();
-
-  ctx.fillStyle = '#565656';
-  ctx.beginPath();
-  ctx.moveTo(10,-9); ctx.lineTo(-6,-22); ctx.lineTo(-18,-9); ctx.closePath(); ctx.fill();
 
   ctx.restore();
 }
@@ -263,27 +258,9 @@ function drawWireframeObject(ctx, cx, cy, scale=1, alpha=1, color='#F0F0F0'){
   ctx.shadowColor = color;
   ctx.shadowBlur = 14;
 
-  ctx.beginPath();
-  ctx.moveTo(-65, 0);
-  for (let i=1;i<=10;i++){
-    const t = i/10;
-    ctx.lineTo(-65 - t*130, Math.sin(t*10)*4);
-  }
-  ctx.stroke();
-
   drawMunitionPath(ctx);
   ctx.stroke();
-
-  ctx.beginPath();
-  ctx.moveTo(-45,-9); ctx.lineTo(-62,-30); ctx.lineTo(-38,-9);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(-45,9); ctx.lineTo(-62,30); ctx.lineTo(-38,9);
-  ctx.stroke();
-
-  ctx.beginPath();
-  ctx.moveTo(10,-9); ctx.lineTo(-6,-22); ctx.lineTo(-18,-9);
-  ctx.stroke();
+  drawFins(ctx, false);
 
   ctx.beginPath();
   ctx.arc(0,0,2.5,0,Math.PI*2); ctx.fillStyle = color; ctx.fill();
@@ -291,13 +268,51 @@ function drawWireframeObject(ctx, cx, cy, scale=1, alpha=1, color='#F0F0F0'){
   ctx.restore();
 }
 
-const centerX = () => window.innerWidth/2;
+function drawWireStub(ctx, cx, cy, scale=1, alpha=1, color='#8A8A8A', length=110){
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.4;
+  ctx.beginPath();
+  const tailX = cx - 60*scale;
+  ctx.moveTo(tailX, cy);
+  const segs = 14;
+  for (let i=1;i<=segs;i++){
+    const t = i/segs;
+    ctx.lineTo(tailX - t*length, cy + Math.sin(t*9)*5);
+  }
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawFiberTrail(ctx, launchX, currentX, y, color='#CFCFCF'){
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.shadowColor = color;
+  ctx.shadowBlur = 6;
+  ctx.beginPath();
+  const span = currentX - launchX;
+  const segs = Math.max(8, Math.floor(span/20));
+  ctx.moveTo(launchX, y);
+  for (let i=1;i<=segs;i++){
+    const t = i/segs;
+    const x = launchX + span*t;
+    const wob = Math.sin(t*16 + span*0.01) * 5 * (1 - Math.abs(t-0.5)*0.6);
+    ctx.lineTo(x, y + wob);
+  }
+  ctx.stroke();
+  ctx.restore();
+}
+
+const centerX = () => window.innerWidth*0.58;
 const centerY = () => window.innerHeight*0.34;
 
 async function runHookScene(){
   document.getElementById('liveScene').style.display = 'block';
   objCtx.clearRect(0,0,objCanvas.width,objCanvas.height);
-  drawSolidObject(objCtx, centerX(), centerY(), 2.6);
+  drawSolidObject(objCtx, centerX(), centerY(), 2.2);
+  drawWireStub(objCtx, centerX(), centerY(), 2.2, 1, '#8A8A8A', 260);
   await sleep(9000);
   await typeOn(document.getElementById('hookLabel1'), 'NO RF EMISSION\nDETECTED', 110);
   await sleep(3200);
@@ -317,7 +332,8 @@ async function runPeelReveal(){
   for (let s=0; s<=steps; s++){
     const p = s/steps;
     objCtx.clearRect(0,0,objCanvas.width,objCanvas.height);
-    drawSolidObject(objCtx, cx, cy, 2.6, 1-p);
+    drawSolidObject(objCtx, cx, cy, 2.2, 1-p);
+    drawWireStub(objCtx, cx, cy, 2.2, 1-p*0.4, '#8A8A8A', 260);
 
     peelCtx.clearRect(0,0,peelCanvas.width,peelCanvas.height);
     peelCtx.save();
@@ -333,26 +349,24 @@ async function runPeelReveal(){
     }
     peelCtx.restore();
 
-    drawWireframeObject(objCtx, cx, cy, 2.6, p);
+    drawWireframeObject(objCtx, cx, cy, 2.2, p);
+    drawWireStub(objCtx, cx, cy, 2.2, p, '#F0F0F0', 260);
     await sleep(30);
   }
   await sleep(3200);
   peelCtx.clearRect(0,0,peelCanvas.width,peelCanvas.height);
 
   await sleep(1400);
-  label.classList.add('strike');
-  await sleep(2200);
-  label.classList.remove('strike');
   await typeOn(label, 'NOT A PICTURE.\nA SHAPE.', 120);
   await sleep(3600);
   label.classList.remove('show');
 }
 
 const stations = [
-  { frac:0.20, name:'SHAPE', result:'OUTLINE FOUND' },
-  { frac:0.42, name:'MOVEMENT', result:'MOTION MATCHES' },
-  { frac:0.64, name:'FORM', result:'FORM CONFIRMED' },
-  { frac:0.86, name:'CATALOG MATCH', result:'MATCHES:\nTHREAT MODEL CATALOG\u2122' },
+  { frac:0.20, name:'OUTLINE', result:'A SHAPE\nEMERGES' },
+  { frac:0.42, name:'MOTION',  result:'MOVEMENT\nHOLDS TOGETHER' },
+  { frac:0.64, name:'STRUCTURE', result:'A REAL\nTHREE-DIMENSIONAL FORM' },
+  { frac:0.86, name:'MATCH', result:'CONFIRMED AGAINST THE\nTHREAT MODEL CATALOG\u2122' },
 ];
 
 function drawTrackStatic(pulsePhase=0){
@@ -382,19 +396,18 @@ function drawTrackStatic(pulsePhase=0){
 
 async function runVerificationWalk(freezeAfter1, freezeAfter3){
   document.getElementById('gateLine').style.display='none';
-  drawTrackStatic();
   const y = window.innerHeight*0.5;
   const startX = window.innerWidth*0.06;
   const endX = window.innerWidth*0.94;
 
   const stationLabel = document.createElement('div');
   stationLabel.className = 'hud tiny stationLabel show';
-  stationLabel.style.top = (y/window.innerHeight*100 - 20) + '%';
+  stationLabel.style.top = (y/window.innerHeight*100 - 22) + '%';
   document.getElementById('liveScene').appendChild(stationLabel);
 
   const resultLabel = document.createElement('div');
-  resultLabel.className = 'hud green tiny stationLabel show';
-  resultLabel.style.top = (y/window.innerHeight*100 + 14) + '%';
+  resultLabel.className = 'hud micro stationLabel show';
+  resultLabel.style.top = (y/window.innerHeight*100 + 12) + '%';
   document.getElementById('liveScene').appendChild(resultLabel);
 
   let stIdx = 0;
@@ -404,6 +417,7 @@ async function runVerificationWalk(freezeAfter1, freezeAfter3){
     const p = f/frames;
     const x = startX + (endX-startX)*p;
     drawTrackStatic(f*0.15);
+    drawFiberTrail(trackCtx, startX, x, y);
     drawWireframeObject(trackCtx, x, y, 1.05, 1);
 
     if (stIdx < stations.length){
@@ -415,7 +429,7 @@ async function runVerificationWalk(freezeAfter1, freezeAfter3){
         resultLabel.style.transform = 'translateX(-50%)';
         await typeOn(stationLabel, stations[stIdx].name, 85);
         await sleep(1200);
-        await typeOn(resultLabel, stations[stIdx].result, 85);
+        await typeOn(resultLabel, stations[stIdx].result, 55);
         await sleep(3000);
 
         if (stIdx === 0 && freezeAfter1){
@@ -477,56 +491,37 @@ async function runOutcome(){
   await sleep(6500);
 }
 
-async function fadeToBlack(ms=2200){
-  const overlay = document.createElement('div');
-  overlay.style.position='absolute'; overlay.style.top=0; overlay.style.left=0;
-  overlay.style.width='100%'; overlay.style.height='100%';
-  overlay.style.background='#060606'; overlay.style.opacity='0';
-  overlay.style.transition = `opacity ${ms}ms ease`;
-  overlay.style.zIndex = 100;
-  document.getElementById('stage').appendChild(overlay);
-  await sleep(30);
-  overlay.style.opacity='1';
-  await sleep(ms);
-  return overlay;
-}
-
 async function runAct0(){
-  const co1 = document.getElementById('co1');
-  const co2 = document.getElementById('co2');
-  const co3 = document.getElementById('co3');
+  const title = document.getElementById('titleAnchor');
 
-  await typeOn(co1, "EVERY CAMERA.\nEVERY RADAR.\nEVERY GPS RECEIVER.", 95);
-  await sleep(3600);
-  await typeOn(co2, "TRUSTS INPUTS\nTHE ADVERSARY\nCONTROLS.", 95);
-  await sleep(4800);
-  co1.classList.add('strike');
-  co2.classList.add('strike');
-  await sleep(4800);
+  await typeOn(title, "EVERY CAMERA.\nEVERY RADAR.\nEVERY GPS RECEIVER.", 80);
+  await sleep(2200);
+  await typeOn(title, "TRUSTS INPUTS\nTHE ADVERSARY CONTROLS.", 80);
+  await sleep(2600);
 
-  document.getElementById('coldOpen').style.display='none';
-  await sleep(600);
-  document.getElementById('coldOpen').style.display='flex';
-  co1.style.display='none';
-  co2.style.display='none';
+  title.classList.remove('show');
+  await sleep(250);
 
-  await typeOn(co3, "OTIS DOESN'T.", 130);
-  await sleep(5200);
+  await typeOn(title, "OTIS DOESN'T.", 90);
+  await sleep(2000);
+  title.classList.remove('show');
 
-  document.getElementById('coldOpen').style.display='none';
+  await sceneTransition(400);
+
   document.getElementById('logoCard').style.display='flex';
   const wm = document.getElementById('logoWordmark');
   wm.classList.add('reveal');
-  await sleep(3600);
+  await sleep(1400);
   document.getElementById('logoSub').classList.add('show');
-  await sleep(4800);
+  await sleep(1500);
   document.getElementById('logoFooter').classList.add('show');
-  await sleep(7500);
+  await sleep(2600);
 
   document.getElementById('logoCard').style.display='none';
 }
 
 async function runAct1(){
+  await sceneTransition(400);
   await runHookScene();
   await showFreeze([
     'Fiber-optic guided munitions trail a physical wire<br>instead of transmitting a signal.',
@@ -546,16 +541,19 @@ async function runAct1(){
   ]);
 
   objCtx.clearRect(0,0,objCanvas.width,objCanvas.height);
+  await sceneTransition(350);
   await runVerificationWalk(true, true);
 
+  await sceneTransition(350);
   await runDecisionGate(true);
   await showFreeze([
     'This gate allows only two outcomes:<br>confirmed, or rejected. Nothing in between.',
     'No confidence score. No "maybe."<br>A percentage can be argued with — this can\'t.'
   ]);
 
+  await sceneTransition(350);
   await runOutcome();
-  await fadeToBlack(2600);
+  await sceneTransition(700);
 }
 
 async function main(){
