@@ -396,12 +396,6 @@ async function runHookScene(){
   document.getElementById('feedClock').classList.add('show');
   document.getElementById('feedClock').textContent = 'SECTOR 7 // ALT 340M';
 
-  await showFreeze([
-    'Fiber-optic guided FPV platform — the dominant<br>threat variant currently fielded.',
-    'Guidance runs over a physical fiber-optic tether,<br>not a radio uplink.',
-    'No RF emission. Nothing to geolocate, jam, or spoof.'
-  ], 5200, 1600, 900);
-
   await flyDroneIn();
 
   const cx = centerX(), cy = centerY();
@@ -428,7 +422,13 @@ async function runHookScene(){
   };
   animate();
 
-  await sleep(1200);
+  await sleep(600);
+  await showFreeze([
+    'Fiber-optic guided FPV platform — the dominant<br>threat variant currently fielded.',
+    'Guidance runs over a physical fiber-optic tether,<br>not a radio uplink.',
+    'No RF emission. Nothing to geolocate, jam, or spoof.'
+  ], 5200, 1600, 900);
+
   await typeOn(document.getElementById('hookLabel1'), 'NO RF EMISSION\nDETECTED', 90);
   await sleep(1800);
   await typeOn(document.getElementById('hookLabel2'), 'NO GPS\nCORRELATION', 90);
