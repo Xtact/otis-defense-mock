@@ -6,46 +6,61 @@
 <title>OTIS // Demo — Act 0 + Act 1</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
-  html,body { background:#0A0A0A; overflow:hidden; height:100vh; width:100vw; }
-  #stage { position:relative; width:100vw; height:100vh; background:#0A0A0A; overflow:hidden; }
+  html,body { background:#060606; overflow:hidden; height:100vh; width:100vw; }
+  #stage { position:relative; width:100vw; height:100vh; background:#060606; overflow:hidden; }
   canvas { position:absolute; top:0; left:0; }
 
+  .grid-overlay {
+    position:absolute; top:0; left:0; width:100%; height:100%; z-index:2; pointer-events:none;
+    background-image:
+      linear-gradient(rgba(232,232,232,0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(232,232,232,0.05) 1px, transparent 1px);
+    background-size: 64px 64px;
+  }
+  .vignette {
+    position:absolute; top:0; left:0; width:100%; height:100%; z-index:3; pointer-events:none;
+    background: radial-gradient(ellipse at center, rgba(0,0,0,0) 40%, rgba(0,0,0,0.55) 100%);
+  }
+
   .hud {
-    position:absolute; font-family:'Courier New', monospace; font-weight:bold; color:#E8E8E8;
-    letter-spacing:2px; font-size:1.9rem; opacity:0; white-space:pre-wrap;
-    text-align:center; line-height:1.5;
+    position:absolute; font-family:'Courier New', monospace; font-weight:bold; color:#F0F0F0;
+    letter-spacing:3px; font-size:5.4rem; opacity:0; white-space:pre-wrap;
+    text-align:center; line-height:1.45; text-shadow: 0 0 18px rgba(232,232,232,0.25);
   }
   .hud.show { opacity:1; }
-  .hud.red { color:#FF3B30; }
-  .hud.green { color:#39FF88; }
-  .hud.strike { text-decoration: line-through; color:#5A5A5A; }
-  .hud.small { font-size:1.3rem; }
+  .hud.red { color:#FF3B30; text-shadow: 0 0 22px rgba(255,59,48,0.55); }
+  .hud.green { color:#39FF88; text-shadow: 0 0 22px rgba(57,255,136,0.55); }
+  .hud.strike { text-decoration: line-through; color:#5A5A5A; text-shadow:none; }
+  .hud.small { font-size:2.6rem; }
+  .hud.tiny { font-size:2.1rem; }
 
   #coldOpen {
     position:absolute; top:0; left:0; width:100%; height:100%;
     display:flex; flex-direction:column; align-items:center; justify-content:center;
-    text-align:center; gap:26px; padding:0 6%;
+    text-align:center; gap:40px; padding:0 5%; z-index:10;
   }
   .co-line {
-    font-family:'Courier New', monospace; font-weight:bold; color:#E8E8E8; letter-spacing:2px;
-    font-size:2.2rem; opacity:0; line-height:1.5; max-width:1000px;
+    font-family:'Courier New', monospace; font-weight:bold; color:#F0F0F0; letter-spacing:3px;
+    font-size:4.8rem; opacity:0; line-height:1.4; max-width:1500px;
+    text-shadow: 0 0 18px rgba(232,232,232,0.25);
   }
   .co-line.show { opacity:1; }
-  .co-line.strike { text-decoration:line-through; color:#FF3B30; opacity:1; }
+  .co-line.strike { text-decoration:line-through; color:#FF3B30; opacity:1; text-shadow:0 0 22px rgba(255,59,48,0.5); }
 
   #logoCard { position:absolute; top:0; left:0; width:100%; height:100%; display:none;
-    flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:22px; padding:0 6%; }
+    flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:34px; padding:0 5%; z-index:10; }
   #logoWordmark {
-    font-family:'Courier New', monospace; font-size:4.4rem; font-weight:bold; letter-spacing:14px;
-    color:#E8E8E8; position:relative; overflow:hidden; clip-path: inset(0 0 100% 0);
+    font-family:'Courier New', monospace; font-size:8.5rem; font-weight:bold; letter-spacing:22px;
+    color:#F0F0F0; position:relative; overflow:hidden; clip-path: inset(0 0 100% 0);
+    text-shadow: 0 0 30px rgba(232,232,232,0.35);
   }
-  #logoWordmark.reveal { animation: scanReveal 1.8s steps(24) forwards; }
+  #logoWordmark.reveal { animation: scanReveal 2.6s steps(24) forwards; }
   @keyframes scanReveal { to { clip-path: inset(0 0 0% 0); } }
-  #logoSub { font-family:'Courier New', monospace; font-weight:bold; font-size:1.2rem; letter-spacing:2px; color:#B0B0B0; opacity:0; transition:opacity 1.2s ease; max-width:820px; line-height:1.6; }
+  #logoSub { font-family:'Courier New', monospace; font-weight:bold; font-size:2.1rem; letter-spacing:3px; color:#C4C4C4; opacity:0; transition:opacity 1.6s ease; max-width:1150px; line-height:1.6; }
   #logoSub.show { opacity:1; }
-  #logoFooter { position:absolute; bottom:40px; left:50%; transform:translateX(-50%);
-    font-family:'Courier New', monospace; font-weight:bold; font-size:0.85rem; letter-spacing:2px; color:#8A8A8A;
-    opacity:0; transition:opacity 1.2s ease; text-align:center; }
+  #logoFooter { position:absolute; bottom:48px; left:50%; transform:translateX(-50%);
+    font-family:'Courier New', monospace; font-weight:bold; font-size:1.3rem; letter-spacing:3px; color:#909090;
+    opacity:0; transition:opacity 1.6s ease; text-align:center; }
   #logoFooter.show { opacity:1; }
 
   #liveScene { position:absolute; top:0; left:0; width:100%; height:100%; display:none; }
@@ -53,45 +68,49 @@
   #peelCanvas { z-index:6; pointer-events:none; }
   #trackCanvas { z-index:5; }
 
-  .hookLabel { left:50%; transform:translateX(-50%); width:88%; text-align:center; }
+  .hookLabel { left:50%; transform:translateX(-50%); width:92%; text-align:center; }
 
   #freezeOverlay {
     position:absolute; top:0; left:0; width:100%; height:100%;
-    background:rgba(10,10,10,0.55); z-index:50; display:none;
+    background:rgba(6,6,6,0.68); z-index:50; display:none;
     align-items:center; justify-content:center;
+    backdrop-filter: blur(1px);
   }
   #freezeText {
     font-family: -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif;
-    color:#F2F2F2; font-size:2rem; font-weight:600; line-height:1.65; text-align:center;
-    max-width:1000px; padding:0 32px;
+    color:#F5F5F5; font-size:3.4rem; font-weight:700; line-height:1.55; text-align:center;
+    max-width:1350px; padding:0 40px;
   }
-  #freezeText div { opacity:0; transition:opacity 0.7s ease; margin-bottom:22px; }
+  #freezeText div { opacity:0; transition:opacity 1s ease; margin-bottom:34px; }
   #freezeText div.show { opacity:1; }
 
-  .stationLabel { text-align:center; width:360px; }
-  .gateLine { position:absolute; top:50%; left:8%; width:84%; height:2px; background:#3A3A3A; z-index:4; }
+  .stationLabel { text-align:center; width:520px; }
+  .gateLine { position:absolute; top:50%; left:6%; width:88%; height:3px; background:#3A3A3A; z-index:4;
+    box-shadow: 0 0 8px rgba(58,58,58,0.6); }
 
   #barrier {
-    position:absolute; top:50%; left:50%; width:16px; height:130px; background:#3A3A3A;
-    transform:translate(-50%,-50%); z-index:7; transition: transform 0.08s steps(1), background 0.08s steps(1);
+    position:absolute; top:50%; left:50%; width:22px; height:190px; background:#3A3A3A;
+    transform:translate(-50%,-50%); z-index:7; transition: transform 0.08s steps(1), background 0.08s steps(1), box-shadow 0.08s steps(1);
+    box-shadow: 0 0 10px rgba(58,58,58,0.5);
   }
-  #barrier.open { transform: translate(-50%,-50%) rotate(90deg) translateX(0px); background:#39FF88; }
-  #barrier.fail { background:#FF3B30; }
+  #barrier.open { transform: translate(-50%,-50%) rotate(90deg) translateX(0px); background:#39FF88; box-shadow: 0 0 40px rgba(57,255,136,0.85); }
+  #barrier.fail { background:#FF3B30; box-shadow: 0 0 40px rgba(255,59,48,0.85); }
 </style>
 </head>
 <body>
 <div id="stage">
   <canvas id="bgCanvas"></canvas>
+  <div class="grid-overlay"></div>
 
   <div id="coldOpen">
-    <div class="co-line" id="co1">EVERY CAMERA. EVERY RADAR.<br>EVERY GPS RECEIVER.</div>
-    <div class="co-line" id="co2">TRUSTS INPUTS THE<br>ADVERSARY CONTROLS.</div>
-    <div class="co-line" id="co3" style="margin-top:24px;">OTIS DOESN'T.</div>
+    <div class="co-line" id="co1">EVERY CAMERA.<br>EVERY RADAR.<br>EVERY GPS RECEIVER.</div>
+    <div class="co-line" id="co2">TRUSTS INPUTS<br>THE ADVERSARY<br>CONTROLS.</div>
+    <div class="co-line" id="co3" style="margin-top:30px;">OTIS DOESN'T.</div>
   </div>
 
   <div id="logoCard">
     <div id="logoWordmark">O.T.I.S.</div>
-    <div id="logoSub">SKYGUARD LABS<br>GEOMETRY INTELLIGENCE FOR THE FULL THREAT SPECTRUM</div>
+    <div id="logoSub">SKYGUARD LABS<br>GEOMETRY INTELLIGENCE FOR<br>THE FULL THREAT SPECTRUM</div>
     <div id="logoFooter">COLORADO | USA</div>
   </div>
 
@@ -99,27 +118,28 @@
     <canvas id="objectCanvas" width="1920" height="1080"></canvas>
     <canvas id="peelCanvas" width="1920" height="1080"></canvas>
     <canvas id="trackCanvas" width="1920" height="1080"></canvas>
-    <div class="hud hookLabel" id="hookLabel1" style="top:74%;">NO RF EMISSION DETECTED</div>
-    <div class="hud hookLabel" id="hookLabel2" style="top:81%;">NO GPS CORRELATION</div>
-    <div class="hud hookLabel" id="hookLabel3" style="top:88%;">LEGACY C-UAS: NO TRACK</div>
-    <div class="hud" id="peelLabel" style="top:10%; left:50%; transform:translateX(-50%); width:90%; text-align:center; font-size:1.7rem;">APPEARANCE IS NEGOTIABLE.<br>GEOMETRY IS NOT.</div>
+    <div class="hud small hookLabel" id="hookLabel1" style="top:58%;">NO RF EMISSION<br>DETECTED</div>
+    <div class="hud small hookLabel" id="hookLabel2" style="top:70%;">NO GPS<br>CORRELATION</div>
+    <div class="hud small hookLabel" id="hookLabel3" style="top:82%;">LEGACY C-UAS:<br>NO TRACK</div>
+    <div class="hud" id="peelLabel" style="top:8%; left:50%; transform:translateX(-50%); width:94%; text-align:center; font-size:3.6rem;">APPEARANCE IS NEGOTIABLE.<br>GEOMETRY IS NOT.</div>
     <div class="gateLine" id="gateLine"></div>
     <div id="barrier"></div>
-    <div class="hud" id="gateFinalLabel" style="top:16%; left:50%; transform:translateX(-50%); width:90%; text-align:center;">FINAL VERIFICATION GATE</div>
-    <div class="hud" id="gateResultLabel" style="top:62%; left:50%; transform:translateX(-50%); width:90%; text-align:center; font-size:2.1rem;"></div>
-    <div class="hud" id="outcome1" style="top:40%; left:50%; transform:translateX(-50%); width:90%; text-align:center; font-size:1.9rem;">THREAT CLASS:<br>FIBER-OPTIC GUIDED MUNITION</div>
-    <div class="hud green" id="outcome2" style="top:56%; left:50%; transform:translateX(-50%); width:90%; text-align:center; font-size:1.9rem;"></div>
+    <div class="hud small" id="gateFinalLabel" style="top:12%; left:50%; transform:translateX(-50%); width:94%; text-align:center;">FINAL VERIFICATION GATE</div>
+    <div class="hud" id="gateResultLabel" style="top:60%; left:50%; transform:translateX(-50%); width:94%; text-align:center; font-size:4.4rem;"></div>
+    <div class="hud small" id="outcome1" style="top:36%; left:50%; transform:translateX(-50%); width:94%; text-align:center;">THREAT CLASS:<br>FIBER-OPTIC GUIDED MUNITION</div>
+    <div class="hud green small" id="outcome2" style="top:54%; left:50%; transform:translateX(-50%); width:94%; text-align:center;"></div>
   </div>
 
   <div id="freezeOverlay">
     <div id="freezeText"></div>
   </div>
+  <div class="vignette"></div>
 </div>
 
 <script>
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-function typeOn(el, text, speed=70) {
+function typeOn(el, text, speed=130) {
   return new Promise(resolve => {
     el.innerHTML = '';
     el.classList.add('show');
@@ -128,11 +148,7 @@ function typeOn(el, text, speed=70) {
     let buffer = '';
     const timer = setInterval(() => {
       const ch = chars[i];
-      if (ch === '\n') {
-        buffer += '<br>';
-      } else {
-        buffer += ch;
-      }
+      buffer += (ch === '\n') ? '<br>' : ch;
       el.innerHTML = buffer;
       i++;
       if (i >= chars.length) { clearInterval(timer); resolve(); }
@@ -140,7 +156,7 @@ function typeOn(el, text, speed=70) {
   });
 }
 
-async function showFreeze(lines, holdEach=3200, exitHold=1400, enterGap=500) {
+async function showFreeze(lines, holdEach=6500, exitHold=2800, enterGap=1000) {
   const overlay = document.getElementById('freezeOverlay');
   const textBox = document.getElementById('freezeText');
   textBox.innerHTML = '';
@@ -161,16 +177,17 @@ const bgCanvas = document.getElementById('bgCanvas');
 const bgCtx = bgCanvas.getContext('2d');
 function resizeBg(){ bgCanvas.width = window.innerWidth; bgCanvas.height = window.innerHeight; }
 window.addEventListener('resize', resizeBg); resizeBg();
-function drawStaticNoise(){
-  bgCtx.fillStyle = '#0A0A0A'; bgCtx.fillRect(0,0,bgCanvas.width,bgCanvas.height);
-  for (let i=0;i<60;i++){
+function drawStars(){
+  bgCtx.fillStyle = '#060606'; bgCtx.fillRect(0,0,bgCanvas.width,bgCanvas.height);
+  for (let i=0;i<180;i++){
     const x = ((Math.sin(i*12.9898)*43758.5453)%1+1)%1 * bgCanvas.width;
     const y = ((Math.sin(i*78.233)*12345.678)%1+1)%1 * bgCanvas.height;
-    bgCtx.fillStyle = 'rgba(232,232,232,0.06)';
-    bgCtx.fillRect(x,y,1,1);
+    const r = ((Math.sin(i*45.5)*1000)%1+1)%1;
+    bgCtx.fillStyle = `rgba(232,232,232,${0.05 + r*0.12})`;
+    bgCtx.fillRect(x,y, r>0.85?2:1, r>0.85?2:1);
   }
 }
-drawStaticNoise();
+drawStars();
 
 const objCanvas = document.getElementById('objectCanvas');
 const objCtx = objCanvas.getContext('2d');
@@ -191,9 +208,9 @@ function drawSolidObject(ctx, cx, cy, scale=1, alpha=1){
   ctx.translate(cx, cy);
   ctx.scale(scale, scale);
   ctx.globalAlpha = alpha;
-  ctx.fillStyle = '#5A5A5A';
-  ctx.strokeStyle = '#8A8A8A';
-  ctx.lineWidth = 1;
+  ctx.fillStyle = '#666666';
+  ctx.strokeStyle = '#9A9A9A';
+  ctx.lineWidth = 1.4;
   ctx.beginPath();
   ctx.moveTo(-70, 0);
   ctx.lineTo(-20, -14);
@@ -207,15 +224,15 @@ function drawSolidObject(ctx, cx, cy, scale=1, alpha=1){
   ctx.restore();
 }
 
-function drawWireframeObject(ctx, cx, cy, scale=1, alpha=1, color='#E8E8E8'){
+function drawWireframeObject(ctx, cx, cy, scale=1, alpha=1, color='#F0F0F0'){
   ctx.save();
   ctx.translate(cx, cy);
   ctx.scale(scale, scale);
   ctx.globalAlpha = alpha;
   ctx.strokeStyle = color;
-  ctx.lineWidth = 1.6;
+  ctx.lineWidth = 2.2;
   ctx.shadowColor = color;
-  ctx.shadowBlur = 7;
+  ctx.shadowBlur = 16;
   ctx.beginPath();
   ctx.moveTo(-70, 0);
   ctx.lineTo(-20, -14);
@@ -229,23 +246,25 @@ function drawWireframeObject(ctx, cx, cy, scale=1, alpha=1, color='#E8E8E8'){
   ctx.moveTo(-20,-14); ctx.lineTo(-20,14); ctx.stroke();
   ctx.beginPath();
   ctx.moveTo(20,-9); ctx.lineTo(20,9); ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(0,0,3,0,Math.PI*2); ctx.fillStyle = color; ctx.fill();
   ctx.restore();
 }
 
 const centerX = () => window.innerWidth/2;
-const centerY = () => window.innerHeight*0.42;
+const centerY = () => window.innerHeight*0.34;
 
 async function runHookScene(){
   document.getElementById('liveScene').style.display = 'block';
   objCtx.clearRect(0,0,objCanvas.width,objCanvas.height);
-  drawSolidObject(objCtx, centerX(), centerY(), 1.5);
-  await sleep(4500);
-  await typeOn(document.getElementById('hookLabel1'), 'NO RF EMISSION DETECTED', 65);
-  await sleep(1200);
-  await typeOn(document.getElementById('hookLabel2'), 'NO GPS CORRELATION', 65);
-  await sleep(1200);
-  await typeOn(document.getElementById('hookLabel3'), 'LEGACY C-UAS: NO TRACK', 65);
-  await sleep(2200);
+  drawSolidObject(objCtx, centerX(), centerY(), 2.6);
+  await sleep(9000);
+  await typeOn(document.getElementById('hookLabel1'), 'NO RF EMISSION\nDETECTED', 110);
+  await sleep(3200);
+  await typeOn(document.getElementById('hookLabel2'), 'NO GPS\nCORRELATION', 110);
+  await sleep(3200);
+  await typeOn(document.getElementById('hookLabel3'), 'LEGACY C-UAS:\nNO TRACK', 110);
+  await sleep(5000);
 }
 
 async function runPeelReveal(){
@@ -254,37 +273,38 @@ async function runPeelReveal(){
   label.innerHTML = 'APPEARANCE IS NEGOTIABLE.<br>GEOMETRY IS NOT.';
 
   const cx = centerX(), cy = centerY();
-  const steps = 70;
+  const steps = 90;
   for (let s=0; s<=steps; s++){
     const p = s/steps;
     objCtx.clearRect(0,0,objCanvas.width,objCanvas.height);
-    drawSolidObject(objCtx, cx, cy, 1.5, 1-p);
+    drawSolidObject(objCtx, cx, cy, 2.6, 1-p);
 
     peelCtx.clearRect(0,0,peelCanvas.width,peelCanvas.height);
     peelCtx.save();
-    peelCtx.globalAlpha = Math.min(0.9, p*1.4);
-    for (let i=0;i<140;i++){
-      const ang = (i/140)*Math.PI*2;
-      const dist = p*95;
-      const px = cx + Math.cos(ang)*(32+dist) + (Math.random()-0.5)*10;
-      const py = cy + Math.sin(ang)*(15+dist*0.5) + (Math.random()-0.5)*10;
-      peelCtx.fillStyle = '#8A8A8A';
-      peelCtx.fillRect(px, py, 1.8, 1.8);
+    peelCtx.globalAlpha = Math.min(0.95, p*1.3);
+    for (let i=0;i<260;i++){
+      const ang = (i/260)*Math.PI*2;
+      const dist = p*170;
+      const px = cx + Math.cos(ang)*(50+dist) + (Math.random()-0.5)*18;
+      const py = cy + Math.sin(ang)*(24+dist*0.55) + (Math.random()-0.5)*18;
+      const size = 1.4 + Math.random()*1.6;
+      peelCtx.fillStyle = i%3===0 ? '#F0F0F0' : '#9A9A9A';
+      peelCtx.fillRect(px, py, size, size);
     }
     peelCtx.restore();
 
-    drawWireframeObject(objCtx, cx, cy, 1.5, p);
-    await sleep(24);
+    drawWireframeObject(objCtx, cx, cy, 2.6, p);
+    await sleep(30);
   }
-  await sleep(1800);
+  await sleep(3200);
   peelCtx.clearRect(0,0,peelCanvas.width,peelCanvas.height);
 
-  await sleep(600);
+  await sleep(1400);
   label.classList.add('strike');
-  await sleep(1000);
+  await sleep(2200);
   label.classList.remove('strike');
-  await typeOn(label, 'INITIATING GEOMETRY\nVERIFICATION', 60);
-  await sleep(1800);
+  await typeOn(label, 'INITIATING GEOMETRY\nVERIFICATION', 120);
+  await sleep(3600);
   label.classList.remove('show');
 }
 
@@ -295,21 +315,27 @@ const stations = [
   { frac:0.86, name:'STAGE 4\nCATALOG MATCH', result:'MATCHED:\nTHREAT MODEL CATALOG\u2122' },
 ];
 
-function drawTrackStatic(){
+function drawTrackStatic(pulsePhase=0){
   trackCtx.clearRect(0,0,trackCanvas.width,trackCanvas.height);
   const y = window.innerHeight*0.5;
   trackCtx.strokeStyle = '#3A3A3A';
-  trackCtx.lineWidth = 2;
+  trackCtx.lineWidth = 3;
+  trackCtx.shadowColor = '#3A3A3A';
+  trackCtx.shadowBlur = 6;
   trackCtx.beginPath();
-  trackCtx.moveTo(window.innerWidth*0.08, y);
-  trackCtx.lineTo(window.innerWidth*0.92, y);
+  trackCtx.moveTo(window.innerWidth*0.06, y);
+  trackCtx.lineTo(window.innerWidth*0.94, y);
   trackCtx.stroke();
-  stations.forEach(st => {
-    const x = window.innerWidth*(0.08 + st.frac*0.84);
-    trackCtx.strokeStyle = '#3A3A3A';
+  stations.forEach((st,idx) => {
+    const x = window.innerWidth*(0.06 + st.frac*0.88);
+    const pulse = 0.5 + 0.5*Math.sin(pulsePhase + idx);
+    trackCtx.strokeStyle = '#4A4A4A';
     trackCtx.beginPath();
-    trackCtx.moveTo(x, y-18);
-    trackCtx.lineTo(x, y+18);
+    trackCtx.arc(x, y, 10 + pulse*3, 0, Math.PI*2);
+    trackCtx.stroke();
+    trackCtx.beginPath();
+    trackCtx.moveTo(x, y-26);
+    trackCtx.lineTo(x, y+26);
     trackCtx.stroke();
   });
 }
@@ -318,40 +344,39 @@ async function runVerificationWalk(freezeAfter1, freezeAfter3){
   document.getElementById('gateLine').style.display='none';
   drawTrackStatic();
   const y = window.innerHeight*0.5;
-  const startX = window.innerWidth*0.08;
-  const endX = window.innerWidth*0.92;
+  const startX = window.innerWidth*0.06;
+  const endX = window.innerWidth*0.94;
 
   const stationLabel = document.createElement('div');
-  stationLabel.className = 'hud small stationLabel show';
-  stationLabel.style.top = (y/window.innerHeight*100 - 16) + '%';
+  stationLabel.className = 'hud tiny stationLabel show';
+  stationLabel.style.top = (y/window.innerHeight*100 - 20) + '%';
   document.getElementById('liveScene').appendChild(stationLabel);
 
   const resultLabel = document.createElement('div');
-  resultLabel.className = 'hud green small stationLabel show';
-  resultLabel.style.top = (y/window.innerHeight*100 + 10) + '%';
+  resultLabel.className = 'hud green tiny stationLabel show';
+  resultLabel.style.top = (y/window.innerHeight*100 + 14) + '%';
   document.getElementById('liveScene').appendChild(resultLabel);
 
   let stIdx = 0;
-  const totalDurationMs = 6000;
-  const frames = 100;
+  const totalDurationMs = 14000;
+  const frames = 140;
   for (let f=0; f<=frames; f++){
     const p = f/frames;
     const x = startX + (endX-startX)*p;
-    trackCtx.clearRect(0,0,trackCanvas.width,trackCanvas.height);
-    drawTrackStatic();
-    drawWireframeObject(trackCtx, x, y, 0.75, 1);
+    drawTrackStatic(f*0.15);
+    drawWireframeObject(trackCtx, x, y, 1.05, 1);
 
     if (stIdx < stations.length){
-      const stX = window.innerWidth*(0.08 + stations[stIdx].frac*0.84);
+      const stX = window.innerWidth*(0.06 + stations[stIdx].frac*0.88);
       if (x >= stX){
         stationLabel.style.left = stX + 'px';
         stationLabel.style.transform = 'translateX(-50%)';
         resultLabel.style.left = stX + 'px';
         resultLabel.style.transform = 'translateX(-50%)';
-        await typeOn(stationLabel, stations[stIdx].name, 45);
-        await sleep(500);
-        await typeOn(resultLabel, stations[stIdx].result, 45);
+        await typeOn(stationLabel, stations[stIdx].name, 85);
         await sleep(1200);
+        await typeOn(resultLabel, stations[stIdx].result, 85);
+        await sleep(3000);
 
         if (stIdx === 0 && freezeAfter1){
           await showFreeze([
@@ -361,14 +386,14 @@ async function runVerificationWalk(freezeAfter1, freezeAfter3){
         }
         if (stIdx === 2 && freezeAfter3){
           await showFreeze([
-            'Here, the outline becomes a real 3-D structure<br>and gets checked against the Threat Model Catalog\u2122 —',
+            'Here, the outline becomes a real 3-D structure<br>and gets checked against the<br>Threat Model Catalog\u2122 —',
             'a library of known threat geometries,<br>built from physics, not photographs.'
           ]);
         }
         stIdx++;
         stationLabel.classList.remove('show');
         resultLabel.classList.remove('show');
-        await sleep(300);
+        await sleep(800);
       }
     }
     await sleep(totalDurationMs/frames);
@@ -385,19 +410,19 @@ async function runDecisionGate(pass=true){
   barrier.style.display = 'block';
   barrier.style.top = '50%';
 
-  await typeOn(finalLabel, 'FINAL VERIFICATION GATE', 55);
-  await sleep(1800);
+  await typeOn(finalLabel, 'FINAL VERIFICATION GATE', 100);
+  await sleep(4000);
 
   if (pass){
     barrier.classList.add('open');
     resultLabel.classList.add('green');
-    await typeOn(resultLabel, 'PASS \u2192 CLASSIFIED', 60);
+    await typeOn(resultLabel, 'PASS \u2192 CLASSIFIED', 110);
   } else {
     barrier.classList.add('fail');
     resultLabel.classList.add('red');
-    await typeOn(resultLabel, 'FAIL \u2192 ZERO', 60);
+    await typeOn(resultLabel, 'FAIL \u2192 ZERO', 110);
   }
-  await sleep(2200);
+  await sleep(5000);
 }
 
 async function runOutcome(){
@@ -406,17 +431,17 @@ async function runOutcome(){
   document.getElementById('gateResultLabel').classList.remove('show');
   const o1 = document.getElementById('outcome1');
   const o2 = document.getElementById('outcome2');
-  await typeOn(o1, 'THREAT CLASS:\nFIBER-OPTIC GUIDED MUNITION', 55);
-  await sleep(1000);
-  await typeOn(o2, 'VERDICT: HOSTILE\nGEOMETRY CONFIRMED', 55);
-  await sleep(3200);
+  await typeOn(o1, 'THREAT CLASS:\nFIBER-OPTIC GUIDED MUNITION', 95);
+  await sleep(2400);
+  await typeOn(o2, 'VERDICT: HOSTILE\nGEOMETRY CONFIRMED', 95);
+  await sleep(6500);
 }
 
-async function fadeToBlack(ms=1400){
+async function fadeToBlack(ms=2200){
   const overlay = document.createElement('div');
   overlay.style.position='absolute'; overlay.style.top=0; overlay.style.left=0;
   overlay.style.width='100%'; overlay.style.height='100%';
-  overlay.style.background='#0A0A0A'; overlay.style.opacity='0';
+  overlay.style.background='#060606'; overlay.style.opacity='0';
   overlay.style.transition = `opacity ${ms}ms ease`;
   overlay.style.zIndex = 100;
   document.getElementById('stage').appendChild(overlay);
@@ -431,32 +456,32 @@ async function runAct0(){
   const co2 = document.getElementById('co2');
   const co3 = document.getElementById('co3');
 
-  await typeOn(co1, "EVERY CAMERA. EVERY RADAR.\nEVERY GPS RECEIVER.", 50);
-  await sleep(1600);
-  await typeOn(co2, "TRUSTS INPUTS THE\nADVERSARY CONTROLS.", 50);
-  await sleep(2200);
+  await typeOn(co1, "EVERY CAMERA.\nEVERY RADAR.\nEVERY GPS RECEIVER.", 95);
+  await sleep(3600);
+  await typeOn(co2, "TRUSTS INPUTS\nTHE ADVERSARY\nCONTROLS.", 95);
+  await sleep(4800);
   co1.classList.add('strike');
   co2.classList.add('strike');
-  await sleep(2200);
+  await sleep(4800);
 
   document.getElementById('coldOpen').style.display='none';
-  await sleep(300);
+  await sleep(600);
   document.getElementById('coldOpen').style.display='flex';
   co1.style.display='none';
   co2.style.display='none';
 
-  await typeOn(co3, "OTIS DOESN'T.", 65);
-  await sleep(2400);
+  await typeOn(co3, "OTIS DOESN'T.", 130);
+  await sleep(5200);
 
   document.getElementById('coldOpen').style.display='none';
   document.getElementById('logoCard').style.display='flex';
   const wm = document.getElementById('logoWordmark');
   wm.classList.add('reveal');
-  await sleep(2000);
-  document.getElementById('logoSub').classList.add('show');
-  await sleep(2200);
-  document.getElementById('logoFooter').classList.add('show');
   await sleep(3600);
+  document.getElementById('logoSub').classList.add('show');
+  await sleep(4800);
+  document.getElementById('logoFooter').classList.add('show');
+  await sleep(7500);
 
   document.getElementById('logoCard').style.display='none';
 }
@@ -490,7 +515,7 @@ async function runAct1(){
   ]);
 
   await runOutcome();
-  await fadeToBlack(1600);
+  await fadeToBlack(2600);
 }
 
 async function main(){
