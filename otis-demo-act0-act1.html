@@ -47,22 +47,6 @@
   .hud.tiny { font-size:2.1rem; }
   .hud.micro { font-size:1.5rem; font-weight:600; letter-spacing:1px; color:#B7B7B7; text-shadow:none; }
 
-  #logoCard { position:absolute; top:0; left:0; width:100%; height:100%; display:none;
-    flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:34px; padding:0 5%; z-index:10; }
-  #logoWordmark {
-    font-family:'Courier New', monospace; font-size:8.5rem; font-weight:bold; letter-spacing:22px;
-    color:#F0F0F0; position:relative; overflow:hidden; clip-path: inset(0 0 100% 0);
-    text-shadow: 0 0 30px rgba(232,232,232,0.35);
-  }
-  #logoWordmark.reveal { animation: scanReveal 1.3s steps(24) forwards; }
-  @keyframes scanReveal { to { clip-path: inset(0 0 0% 0); } }
-  #logoSub { font-family:'Courier New', monospace; font-weight:bold; font-size:2.1rem; letter-spacing:3px; color:#C4C4C4; opacity:0; transition:opacity 0.6s ease; max-width:1150px; line-height:1.6; }
-  #logoSub.show { opacity:1; }
-  #logoFooter { position:absolute; bottom:48px; left:50%; transform:translateX(-50%);
-    font-family:'Courier New', monospace; font-weight:bold; font-size:1.3rem; letter-spacing:3px; color:#909090;
-    opacity:0; transition:opacity 0.6s ease; text-align:center; }
-  #logoFooter.show { opacity:1; }
-
   #liveScene { position:absolute; top:0; left:0; width:100%; height:100%; display:none; }
   #objectCanvas { z-index:5; }
   #peelCanvas { z-index:6; pointer-events:none; }
@@ -121,12 +105,6 @@
 
   <div id="titleAnchor"></div>
 
-  <div id="logoCard">
-    <div id="logoWordmark">O.T.I.S.</div>
-    <div id="logoSub">SKYGUARD LABS<br>GEOMETRY INTELLIGENCE FOR<br>THE FULL THREAT SPECTRUM</div>
-    <div id="logoFooter">COLORADO | USA</div>
-  </div>
-
   <div id="liveScene">
     <canvas id="objectCanvas" width="1920" height="1080"></canvas>
     <canvas id="peelCanvas" width="1920" height="1080"></canvas>
@@ -142,7 +120,7 @@
     <div id="barrier"></div>
     <div class="hud small" id="gateFinalLabel" style="top:12%; left:50%; transform:translateX(-50%); width:94%; text-align:center;">THE GATE</div>
     <div class="hud" id="gateResultLabel" style="top:60%; left:50%; transform:translateX(-50%); width:94%; text-align:center; font-size:4.4rem;"></div>
-    <div class="hud small" id="outcome1" style="top:36%; left:50%; transform:translateX(-50%); width:94%; text-align:center;">THREAT CLASS:<br>FIBER-OPTIC GUIDED MUNITION</div>
+    <div class="hud small" id="outcome1" style="top:36%; left:50%; transform:translateX(-50%); width:94%; text-align:center;">THREAT CLASS:<br>FIBER-OPTIC GUIDED FPV DRONE</div>
     <div class="hud green small" id="outcome2" style="top:54%; left:50%; transform:translateX(-50%); width:94%; text-align:center;"></div>
   </div>
 
@@ -231,25 +209,40 @@ function sizeCanvases(){
 }
 window.addEventListener('resize', sizeCanvases); sizeCanvases();
 
-function drawMunitionPath(ctx){
+function drawDroneShape(ctx, fillMode){
+  const arms = [[26,22],[26,-22],[-26,-22],[-26,22]];
+  ctx.lineWidth = fillMode ? 3 : 2;
+  arms.forEach(([ax,ay])=>{
+    ctx.beginPath();
+    ctx.moveTo(0,0);
+    ctx.lineTo(ax,ay);
+    if (fillMode) ctx.strokeStyle = '#5E5E5E';
+    ctx.stroke();
+  });
+  arms.forEach(([ax,ay])=>{
+    ctx.beginPath();
+    ctx.arc(ax,ay,11,0,Math.PI*2);
+    if (fillMode){ ctx.fillStyle = 'rgba(110,110,110,0.35)'; ctx.fill(); ctx.strokeStyle = '#8A8A8A'; }
+    ctx.stroke();
+  });
   ctx.beginPath();
-  ctx.moveTo(95, 0);
-  ctx.lineTo(52, -7);
-  ctx.lineTo(-48, -7);
-  ctx.quadraticCurveTo(-60, -7, -60, 0);
-  ctx.quadraticCurveTo(-60, 7, -48, 7);
-  ctx.lineTo(52, 7);
+  ctx.moveTo(-14,-8);
+  ctx.lineTo(14,-8);
+  ctx.quadraticCurveTo(20,-8,20,0);
+  ctx.quadraticCurveTo(20,8,14,8);
+  ctx.lineTo(-14,8);
+  ctx.quadraticCurveTo(-20,8,-20,0);
+  ctx.quadraticCurveTo(-20,-8,-14,-8);
   ctx.closePath();
-}
-
-function drawFins(ctx, fillMode){
-  if (fillMode) ctx.fillStyle = '#565656';
+  if (fillMode){ ctx.fillStyle = '#6E6E6E'; ctx.fill(); ctx.strokeStyle = '#A6A6A6'; }
+  ctx.stroke();
   ctx.beginPath();
-  ctx.moveTo(-38,-7); ctx.lineTo(-58,-26); ctx.lineTo(-46,-7);
-  ctx.closePath(); if (fillMode) ctx.fill(); else ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(-38,7); ctx.lineTo(-58,26); ctx.lineTo(-46,7);
-  ctx.closePath(); if (fillMode) ctx.fill(); else ctx.stroke();
+  ctx.moveTo(18,-4);
+  ctx.lineTo(26,0);
+  ctx.lineTo(18,4);
+  ctx.closePath();
+  if (fillMode){ ctx.fillStyle = '#4A4A4A'; ctx.fill(); }
+  ctx.stroke();
 }
 
 function drawSolidObject(ctx, cx, cy, scale=1, alpha=1, rot=0){
@@ -258,16 +251,7 @@ function drawSolidObject(ctx, cx, cy, scale=1, alpha=1, rot=0){
   ctx.rotate(rot);
   ctx.scale(scale, scale);
   ctx.globalAlpha = alpha;
-
-  drawFins(ctx, true);
-
-  ctx.fillStyle = '#6E6E6E';
-  ctx.strokeStyle = '#A6A6A6';
-  ctx.lineWidth = 1.3;
-  drawMunitionPath(ctx);
-  ctx.fill();
-  ctx.stroke();
-
+  drawDroneShape(ctx, true);
   ctx.restore();
 }
 
@@ -278,58 +262,32 @@ function drawWireframeObject(ctx, cx, cy, scale=1, alpha=1, color='#F0F0F0', rot
   ctx.scale(scale, scale);
   ctx.globalAlpha = alpha;
   ctx.strokeStyle = color;
-  ctx.lineWidth = 2;
   ctx.shadowColor = color;
   ctx.shadowBlur = 14;
-
-  drawMunitionPath(ctx);
-  ctx.stroke();
-  drawFins(ctx, false);
-
+  drawDroneShape(ctx, false);
   ctx.beginPath();
   ctx.arc(0,0,2.5,0,Math.PI*2); ctx.fillStyle = color; ctx.fill();
-
   ctx.restore();
 }
 
-function drawWireStub(ctx, cx, cy, scale=1, alpha=1, color='#8A8A8A', length=110, rot=0){
+function drawFiberTrail(ctx, launchX, launchY, currentX, currentY, color='#CFCFCF', alpha=1){
   ctx.save();
   ctx.globalAlpha = alpha;
-  ctx.strokeStyle = color;
-  ctx.lineWidth = 1.4;
-  const tailLocalX = -60*scale;
-  const cosr = Math.cos(rot), sinr = Math.sin(rot);
-  const tailX = cx + tailLocalX*cosr;
-  const tailY = cy + tailLocalX*sinr;
-  ctx.beginPath();
-  ctx.moveTo(tailX, tailY);
-  const segs = 14;
-  for (let i=1;i<=segs;i++){
-    const t = i/segs;
-    const dx = -t*length;
-    const wob = Math.sin(t*9)*5;
-    const px = tailX + dx*cosr - wob*sinr;
-    const py = tailY + dx*sinr + wob*cosr;
-    ctx.lineTo(px, py);
-  }
-  ctx.stroke();
-  ctx.restore();
-}
-
-function drawFiberTrail(ctx, launchX, currentX, y, color='#CFCFCF'){
-  ctx.save();
   ctx.strokeStyle = color;
   ctx.lineWidth = 2;
   ctx.shadowColor = color;
   ctx.shadowBlur = 6;
   ctx.beginPath();
-  const span = currentX - launchX;
+  const spanX = currentX - launchX;
+  const spanY = currentY - launchY;
+  const span = Math.max(40, Math.hypot(spanX, spanY));
   const segs = Math.max(8, Math.floor(span/20));
-  ctx.moveTo(launchX, y);
+  ctx.moveTo(launchX, launchY);
   for (let i=1;i<=segs;i++){
     const t = i/segs;
-    const x = launchX + span*t;
-    const wob = Math.sin(t*16 + span*0.01) * 5 * (1 - Math.abs(t-0.5)*0.6);
+    const x = launchX + spanX*t;
+    const y = launchY + spanY*t;
+    const wob = Math.sin(t*16 + span*0.01) * 4 * (1 - Math.abs(t-0.5)*0.6);
     ctx.lineTo(x, y + wob);
   }
   ctx.stroke();
@@ -371,6 +329,33 @@ function drawScanSweep(ctx, w, h, t){
 
 const centerX = () => window.innerWidth*0.58;
 const centerY = () => window.innerHeight*0.34;
+const TAIL_OFFSET = 20;
+
+async function flyDroneIn(){
+  const cy = centerY();
+  const restX = centerX();
+  const startX = -180;
+  const launchX = -40;
+  const duration = 2600;
+  const t0 = performance.now();
+  return new Promise(resolve => {
+    function step(){
+      const now = performance.now();
+      const p = Math.min(1, (now - t0) / duration);
+      const eased = 1 - Math.pow(1 - p, 3);
+      const x = startX + (restX - startX) * eased;
+      const bobY = cy + Math.sin(p * Math.PI * 3) * 6;
+
+      objCtx.clearRect(0,0,objCanvas.width,objCanvas.height);
+      drawFiberTrail(objCtx, launchX, cy, x - TAIL_OFFSET, bobY, '#8A8A8A', 0.9);
+      drawSolidObject(objCtx, x, bobY, 2.2, 1, 0);
+
+      if (p < 1) requestAnimationFrame(step);
+      else resolve();
+    }
+    requestAnimationFrame(step);
+  });
+}
 
 async function runHookScene(){
   document.getElementById('liveScene').style.display = 'block';
@@ -378,7 +363,10 @@ async function runHookScene(){
   document.getElementById('feedClock').classList.add('show');
   document.getElementById('feedClock').textContent = 'SECTOR 7 // ALT 340M';
 
+  await flyDroneIn();
+
   const cx = centerX(), cy = centerY();
+  const launchX = -40;
   const startTime = performance.now();
   let running = true;
 
@@ -390,7 +378,7 @@ async function runHookScene(){
     const rot = Math.sin(t*0.5) * 0.02;
 
     objCtx.clearRect(0,0,objCanvas.width,objCanvas.height);
-    drawWireStub(objCtx, cx+driftX, cy+driftY, 2.2, 1, '#8A8A8A', 260, rot);
+    drawFiberTrail(objCtx, launchX, cy, cx+driftX-TAIL_OFFSET, cy+driftY, '#8A8A8A', 0.9);
     drawSolidObject(objCtx, cx+driftX, cy+driftY, 2.2, 1, rot);
 
     hudCtx.clearRect(0,0,hudCanvas.width,hudCanvas.height);
@@ -401,7 +389,7 @@ async function runHookScene(){
   };
   animate();
 
-  await sleep(1500);
+  await sleep(1200);
   await typeOn(document.getElementById('hookLabel1'), 'NO RF EMISSION\nDETECTED', 90);
   await sleep(1800);
   await typeOn(document.getElementById('hookLabel2'), 'NO GPS\nCORRELATION', 90);
@@ -419,12 +407,13 @@ async function runPeelReveal(){
   label.innerHTML = 'APPEARANCE IS NEGOTIABLE.<br>GEOMETRY IS NOT.';
 
   const cx = centerX(), cy = centerY();
+  const launchX = -40;
   const steps = 90;
   for (let s=0; s<=steps; s++){
     const p = s/steps;
     objCtx.clearRect(0,0,objCanvas.width,objCanvas.height);
+    drawFiberTrail(objCtx, launchX, cy, cx-TAIL_OFFSET, cy, '#8A8A8A', 1-p*0.3);
     drawSolidObject(objCtx, cx, cy, 2.2, 1-p);
-    drawWireStub(objCtx, cx, cy, 2.2, 1-p*0.4, '#8A8A8A', 260);
 
     peelCtx.clearRect(0,0,peelCanvas.width,peelCanvas.height);
     peelCtx.save();
@@ -441,7 +430,7 @@ async function runPeelReveal(){
     peelCtx.restore();
 
     drawWireframeObject(objCtx, cx, cy, 2.2, p);
-    drawWireStub(objCtx, cx, cy, 2.2, p, '#F0F0F0', 260);
+    drawFiberTrail(objCtx, launchX, cy, cx-TAIL_OFFSET, cy, '#F0F0F0', p);
     await sleep(30);
   }
   await sleep(2200);
@@ -508,7 +497,7 @@ async function runVerificationWalk(freezeAfter1, freezeAfter3){
     const p = f/frames;
     const x = startX + (endX-startX)*p;
     drawTrackStatic(f*0.15);
-    drawFiberTrail(trackCtx, startX, x, y);
+    drawFiberTrail(trackCtx, startX, y, x-TAIL_OFFSET, y, '#CFCFCF', 1);
     drawWireframeObject(trackCtx, x, y, 1.05, 1);
 
     if (stIdx < stations.length){
@@ -576,7 +565,7 @@ async function runOutcome(){
   document.getElementById('gateResultLabel').classList.remove('show');
   const o1 = document.getElementById('outcome1');
   const o2 = document.getElementById('outcome2');
-  await typeOn(o1, 'THREAT CLASS:\nFIBER-OPTIC GUIDED MUNITION', 95);
+  await typeOn(o1, 'THREAT CLASS:\nFIBER-OPTIC GUIDED FPV DRONE', 95);
   await sleep(1600);
   await typeOn(o2, 'VERDICT: HOSTILE\nGEOMETRY CONFIRMED', 95);
   await sleep(3600);
@@ -598,24 +587,12 @@ async function runAct0(){
   title.classList.remove('show');
 
   await sceneTransition(400);
-
-  document.getElementById('logoCard').style.display='flex';
-  const wm = document.getElementById('logoWordmark');
-  wm.classList.add('reveal');
-  await sleep(1400);
-  document.getElementById('logoSub').classList.add('show');
-  await sleep(1500);
-  document.getElementById('logoFooter').classList.add('show');
-  await sleep(2600);
-
-  document.getElementById('logoCard').style.display='none';
 }
 
 async function runAct1(){
-  await sceneTransition(400);
   await runHookScene();
   await showFreeze([
-    'Fiber-optic guided munitions trail a physical wire<br>instead of transmitting a signal.',
+    'Fiber-optic guided drones trail a physical wire<br>instead of transmitting a signal.',
     'There is nothing to intercept.<br>Nothing to jam. Nothing to spoof.',
     'Every RF-based defense system is<br>structurally blind to this threat class.'
   ]);
