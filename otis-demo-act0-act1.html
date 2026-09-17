@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OTIS // Demo — Act 0 + Act 1</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0A0A0A; overflow:hidden; height:100vh; width:100vw; }
+  #stage { position:relative; width:100vw; height:100vh; background:#0A0A0A; overflow:hidden; }
+  canvas { position:absolute; top:0; left:0; }
+
+  .hud {
+    position:absolute; font-family:'Courier New', monospace; color:#E8E8E8;
+    letter-spacing:2px; font-size:0.9rem; opacity:0; white-space:pre;
+  }
+  .hud.show { opacity:1; }
+  .hud.red { color:#FF3B30; }
+  .hud.green { color:#39FF88; }
+  .hud.strike { text-decoration: line-through; color:#5A5A5A; }
+
+  #coldOpen {
+    position:absolute; top:0; left:0; width:100%; height:100%;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; gap:14px;
+  }
+  .co-line {
+    font-family:'Courier New', monospace; color:#E8E8E8; letter-spacing:3px;
+    font-size:1.3rem; opacity:0;
+  }
+  .co-line.show { opacity:1; }
+  .co-line.strike { text-decoration:line-through; color:#FF3B30; opacity:1; }
+
+  #logoCard { position:absolute; top:0; left:0; width:100%; height:100%; display:none;
+    flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:12px; }
+  #logoWordmark {
+    font-family:'Courier New', monospace; font-size:3rem; font-weight:bold; letter-spacing:10px;
+    color:#E8E8E8; position:relative; overflow:hidden; clip-path: inset(0 0 100% 0);
+  }
+  #logoWordmark.reveal { animation: scanReveal 1.4s steps(24) forwards; }
+  @keyframes scanReveal { to { clip-path: inset(0 0 0% 0); } }
+  #logoSub { font-family:'Courier New', monospace; font-size:0.85rem; letter-spacing:3px; color:#8A8A8A; opacity:0; transition:opacity 1s ease; }
+  #logoSub.show { opacity:1; }
+  #logoFooter { position:absolute; bottom:32px; left:50%; transform:translateX(-50%);
+    font-family:'Courier New', monospace; font-size:0.6rem; letter-spacing:2px; color:#8A8A8A;
+    opacity:0; transition:opacity 1s ease; text-align:center; }
+  #logoFooter.show { opacity:1; }
+
+  #liveScene { position:absolute; top:0; left:0; width:100%; height:100%; display:none; }
+  #objectCanvas { z-index:5; }
+  #peelCanvas { z-index:6; pointer-events:none; }
+  #trackCanvas { z-index:5; }
+
+  .hookLabel { top: 78%; left:50%; transform:translateX(-50%); text-align:center; }
+
+  #freezeOverlay {
+    position:absolute; top:0; left:0; width:100%; height:100%;
+    background:rgba(10,10,10,0.4); z-index:50; display:none;
+    align-items:flex-end; justify-content:center; padding-bottom:12%;
+  }
+  #freezeText {
+    font-family: -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif;
+    color:#E8E8E8; font-size:1.15rem; line-height:1.7; text-align:center;
+    max-width:780px; padding:0 24px;
+  }
+  #freezeText div { opacity:0; transition:opacity 0.5s ease; margin-bottom:8px; }
+  #freezeText div.show { opacity:1; }
+
+  .stationLabel { text-align:center; }
+  .gateLine { position:absolute; top:50%; left:8%; width:84%; height:2px; background:#3A3A3A; z-index:4; }
+  .stationMarker { position:absolute; top:50%; width:3px; height:34px; background:#3A3A3A; transform:translate(-50%,-50%); z-index:4; }
+
+  #barrier {
+    position:absolute; top:50%; left:50%; width:14px; height:120px; background:#3A3A3A;
+    transform:translate(-50%,-50%); z-index:7; transition: transform 0.08s steps(1), background 0.08s steps(1);
+  }
+  #barrier.open { transform: translate(-50%,-50%) rotate(90deg) translateX(0px); background:#39FF88; }
+  #barrier.fail { background:#FF3B30; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="bgCanvas"></canvas>
+
+  <div id="coldOpen">
+    <div class="co-line" id="co1">EVERY CAMERA. EVERY RADAR. EVERY GPS RECEIVER.</div>
+    <div class="co-line" id="co2">TRUSTS INPUTS THE ADVERSARY CONTROLS.</div>
+    <div class="co-line" id="co3" style="margin-top:20px;">OTIS DOESN'T.</div>
+  </div>
+
+  <div id="logoCard">
+    <div id="logoWordmark">O.T.I.S.</div>
+    <div id="logoSub">SKYGUARD LABS — GEOMETRY INTELLIGENCE FOR THE FULL THREAT SPECTRUM</div>
+    <div id="logoFooter">COLORADO | USA</div>
+  </div>
+
+  <div id="liveScene">
+    <canvas id="objectCanvas" width="1920" height="1080"></canvas>
+    <canvas id="peelCanvas" width="1920" height="1080"></canvas>
+    <canvas id="trackCanvas" width="1920" height="1080"></canvas>
+    <div class="hud hookLabel" id="hookLabel1">NO RF EMISSION DETECTED</div>
+    <div class="hud hookLabel" id="hookLabel2" style="top:82%;">NO GPS CORRELATION</div>
+    <div class="hud hookLabel" id="hookLabel3" style="top:86%;">LEGACY C-UAS: NO TRACK</div>
+    <div class="hud" id="peelLabel" style="top:12%; left:50%; transform:translateX(-50%); text-align:center; font-size:1.1rem; letter-spacing:3px;">APPEARANCE IS NEGOTIABLE. GEOMETRY IS NOT.</div>
+    <div class="gateLine" id="gateLine"></div>
+    <div id="barrier"></div>
+    <div class="hud" id="gateFinalLabel" style="top:20%; left:50%; transform:translateX(-50%); text-align:center; letter-spacing:3px;">FINAL VERIFICATION GATE</div>
+    <div class="hud" id="gateResultLabel" style="top:60%; left:50%; transform:translateX(-50%); text-align:center; font-size:1.3rem; letter-spacing:3px;"></div>
+    <div class="hud" id="outcome1" style="top:44%; left:50%; transform:translateX(-50%); text-align:center; font-size:1.2rem; letter-spacing:2px;">THREAT CLASS: FIBER-OPTIC GUIDED MUNITION</div>
+    <div class="hud" id="outcome2" style="top:52%; left:50%; transform:translateX(-50%); text-align:center; font-size:1.2rem; letter-spacing:2px;" class="hud green"></div>
+  </div>
+
+  <div id="freezeOverlay">
+    <div id="freezeText"></div>
+  </div>
+</div>
+
+<script>
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+function typeOn(el, text, speed=28) {
+  return new Promise(resolve => {
+    el.textContent = '';
+    el.classList.add('show');
+    let i = 0;
+    const timer = setInterval(() => {
+      el.textContent += text[i];
+      i++;
+      if (i >= text.length) { clearInterval(timer); resolve(); }
+    }, speed);
+  });
+}
+
+function strike(el) {
+  return new Promise(resolve => {
+    el.classList.add('strike');
+    setTimeout(resolve, 200);
+  });
+}
+
+async function showFreeze(lines, holdEach=1600, exitHold=700) {
+  const overlay = document.getElementById('freezeOverlay');
+  const textBox = document.getElementById('freezeText');
+  textBox.innerHTML = '';
+  overlay.style.display = 'flex';
+  for (const line of lines) {
+    const div = document.createElement('div');
+    div.textContent = line;
+    textBox.appendChild(div);
+    await sleep(50);
+    div.classList.add('show');
+    await sleep(holdEach);
+  }
+  await sleep(exitHold);
+  overlay.style.display = 'none';
+}
+
+// ---------- Background starfield (static, subtle, non-looping-critical) ----------
+const bgCanvas = document.getElementById('bgCanvas');
+const bgCtx = bgCanvas.getContext('2d');
+function resizeBg(){ bgCanvas.width = window.innerWidth; bgCanvas.height = window.innerHeight; }
+window.addEventListener('resize', resizeBg); resizeBg();
+function drawStaticNoise(){
+  bgCtx.fillStyle = '#0A0A0A'; bgCtx.fillRect(0,0,bgCanvas.width,bgCanvas.height);
+  for (let i=0;i<60;i++){
+    const x = ((Math.sin(i*12.9898)*43758.5453)%1+1)%1 * bgCanvas.width;
+    const y = ((Math.sin(i*78.233)*12345.678)%1+1)%1 * bgCanvas.height;
+    bgCtx.fillStyle = 'rgba(232,232,232,0.06)';
+    bgCtx.fillRect(x,y,1,1);
+  }
+}
+drawStaticNoise();
+
+// ---------- Object + Peel canvases ----------
+const objCanvas = document.getElementById('objectCanvas');
+const objCtx = objCanvas.getContext('2d');
+const peelCanvas = document.getElementById('peelCanvas');
+const peelCtx = peelCanvas.getContext('2d');
+const trackCanvas = document.getElementById('trackCanvas');
+const trackCtx = trackCanvas.getContext('2d');
+
+function sizeCanvases(){
+  [objCanvas, peelCanvas, trackCanvas].forEach(c => {
+    c.width = window.innerWidth; c.height = window.innerHeight;
+  });
+}
+window.addEventListener('resize', sizeCanvases); sizeCanvases();
+
+function drawSolidObject(ctx, cx, cy, scale=1, alpha=1){
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.scale(scale, scale);
+  ctx.globalAlpha = alpha;
+  ctx.fillStyle = '#5A5A5A';
+  ctx.strokeStyle = '#8A8A8A';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(-70, 0);
+  ctx.lineTo(-20, -14);
+  ctx.lineTo(50, -6);
+  ctx.lineTo(70, 0);
+  ctx.lineTo(50, 6);
+  ctx.lineTo(-20, 14);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawWireframeObject(ctx, cx, cy, scale=1, alpha=1, color='#E8E8E8'){
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.scale(scale, scale);
+  ctx.globalAlpha = alpha;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.4;
+  ctx.shadowColor = color;
+  ctx.shadowBlur = 6;
+  ctx.beginPath();
+  ctx.moveTo(-70, 0);
+  ctx.lineTo(-20, -14);
+  ctx.lineTo(50, -6);
+  ctx.lineTo(70, 0);
+  ctx.lineTo(50, 6);
+  ctx.lineTo(-20, 14);
+  ctx.closePath();
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(-20,-14); ctx.lineTo(-20,14); ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(20,-9); ctx.lineTo(20,9); ctx.stroke();
+  ctx.restore();
+}
+
+const centerX = () => window.innerWidth/2;
+const centerY = () => window.innerHeight*0.42;
+
+async function runHookScene(){
+  document.getElementById('liveScene').style.display = 'block';
+  objCtx.clearRect(0,0,objCanvas.width,objCanvas.height);
+  drawSolidObject(objCtx, centerX(), centerY(), 1.4);
+  await sleep(3800);
+  await typeOn(document.getElementById('hookLabel1'), 'NO RF EMISSION DETECTED');
+  await sleep(200);
+  await typeOn(document.getElementById('hookLabel2'), 'NO GPS CORRELATION');
+  await sleep(200);
+  await typeOn(document.getElementById('hookLabel3'), 'LEGACY C-UAS: NO TRACK');
+  await sleep(900);
+}
+
+async function runPeelReveal(){
+  const label = document.getElementById('peelLabel');
+  label.classList.add('show');
+  label.textContent = 'APPEARANCE IS NEGOTIABLE. GEOMETRY IS NOT.';
+
+  const cx = centerX(), cy = centerY();
+  const steps = 60;
+  for (let s=0; s<=steps; s++){
+    const p = s/steps;
+    objCtx.clearRect(0,0,objCanvas.width,objCanvas.height);
+    drawSolidObject(objCtx, cx, cy, 1.4, 1-p);
+
+    peelCtx.clearRect(0,0,peelCanvas.width,peelCanvas.height);
+    peelCtx.save();
+    peelCtx.globalAlpha = Math.min(0.9, p*1.4);
+    for (let i=0;i<140;i++){
+      const ang = (i/140)*Math.PI*2;
+      const dist = p*90;
+      const px = cx + Math.cos(ang)*(30+dist) + (Math.random()-0.5)*10;
+      const py = cy + Math.sin(ang)*(14+dist*0.5) + (Math.random()-0.5)*10;
+      peelCtx.fillStyle = '#8A8A8A';
+      peelCtx.fillRect(px, py, 1.6, 1.6);
+    }
+    peelCtx.restore();
+
+    drawWireframeObject(objCtx, cx, cy, 1.4, p);
+    await sleep(16);
+  }
+  await sleep(1200);
+  peelCtx.clearRect(0,0,peelCanvas.width,peelCanvas.height);
+
+  label.classList.add('strike');
+  await sleep(700);
+  label.classList.remove('strike');
+  await typeOn(label, 'INITIATING GEOMETRY VERIFICATION');
+  await sleep(900);
+  label.classList.remove('show');
+}
+
+const stations = [
+  { frac:0.20, name:'STAGE 1 — SHAPE EXTRACTION', result:'OUTLINE ISOLATED' },
+  { frac:0.42, name:'STAGE 2 — MOTION CONSISTENCY', result:'MOVEMENT PATTERN VERIFIED' },
+  { frac:0.64, name:'STAGE 3 — STRUCTURAL ANALYSIS', result:'3-D STRUCTURE RESOLVED' },
+  { frac:0.86, name:'STAGE 4 — CATALOG MATCH', result:'MATCHED: THREAT MODEL CATALOG\u2122' },
+];
+
+function drawTrackStatic(){
+  trackCtx.clearRect(0,0,trackCanvas.width,trackCanvas.height);
+  const y = window.innerHeight*0.5;
+  trackCtx.strokeStyle = '#3A3A3A';
+  trackCtx.lineWidth = 2;
+  trackCtx.beginPath();
+  trackCtx.moveTo(window.innerWidth*0.08, y);
+  trackCtx.lineTo(window.innerWidth*0.92, y);
+  trackCtx.stroke();
+  stations.forEach(st => {
+    const x = window.innerWidth*(0.08 + st.frac*0.84);
+    trackCtx.strokeStyle = '#3A3A3A';
+    trackCtx.beginPath();
+    trackCtx.moveTo(x, y-18);
+    trackCtx.lineTo(x, y+18);
+    trackCtx.stroke();
+  });
+}
+
+async function runVerificationWalk(freezeAfter1, freezeAfter3){
+  document.getElementById('gateLine').style.display='none';
+  drawTrackStatic();
+  const y = window.innerHeight*0.5;
+  const startX = window.innerWidth*0.08;
+  const endX = window.innerWidth*0.92;
+
+  const stationLabel = document.createElement('div');
+  stationLabel.className = 'hud stationLabel show';
+  stationLabel.style.top = (y/window.innerHeight*100 - 12) + '%';
+  document.getElementById('liveScene').appendChild(stationLabel);
+
+  const resultLabel = document.createElement('div');
+  resultLabel.className = 'hud green stationLabel show';
+  resultLabel.style.top = (y/window.innerHeight*100 + 8) + '%';
+  document.getElementById('liveScene').appendChild(resultLabel);
+
+  let stIdx = 0;
+  const totalDurationMs = 4200;
+  const frames = 90;
+  for (let f=0; f<=frames; f++){
+    const p = f/frames;
+    const x = startX + (endX-startX)*p;
+    trackCtx.clearRect(0,0,trackCanvas.width,trackCanvas.height);
+    drawTrackStatic();
+    drawWireframeObject(trackCtx, x, y, 0.7, 1);
+
+    if (stIdx < stations.length){
+      const stX = window.innerWidth*(0.08 + stations[stIdx].frac*0.84);
+      if (x >= stX){
+        stationLabel.style.left = stX + 'px';
+        stationLabel.style.transform = 'translateX(-50%)';
+        resultLabel.style.left = stX + 'px';
+        resultLabel.style.transform = 'translateX(-50%)';
+        await typeOn(stationLabel, stations[stIdx].name, 14);
+        await sleep(150);
+        await typeOn(resultLabel, stations[stIdx].result, 14);
+
+        if (stIdx === 0 && freezeAfter1){
+          await sleep(500);
+          await showFreeze([
+            'This first checkpoint extracts a raw outline of the object — its silhouette.',
+            'No color, no texture. Just shape.'
+          ]);
+        }
+        if (stIdx === 2 && freezeAfter3){
+          await sleep(500);
+          await showFreeze([
+            'Here, the outline becomes a real 3-D structure and gets checked against the Threat Model Catalog\u2122 —',
+            'a library of known threat geometries, built from physics, not photographs.'
+          ]);
+        }
+        stIdx++;
+        stationLabel.classList.remove('show');
+        resultLabel.classList.remove('show');
+        await sleep(100);
+      }
+    }
+    await sleep(totalDurationMs/frames);
+  }
+  stationLabel.remove();
+  resultLabel.remove();
+}
+
+async function runDecisionGate(pass=true){
+  trackCtx.clearRect(0,0,trackCanvas.width,trackCanvas.height);
+  const finalLabel = document.getElementById('gateFinalLabel');
+  const resultLabel = document.getElementById('gateResultLabel');
+  const barrier = document.getElementById('barrier');
+  barrier.style.display = 'block';
+  barrier.style.top = '50%';
+
+  await typeOn(finalLabel, 'FINAL VERIFICATION GATE');
+  await sleep(900);
+
+  if (pass){
+    barrier.classList.add('open');
+    resultLabel.classList.add('green');
+    await typeOn(resultLabel, 'PASS \u2192 CLASSIFIED');
+  } else {
+    barrier.classList.add('fail');
+    resultLabel.classList.add('red');
+    await typeOn(resultLabel, 'FAIL \u2192 ZERO');
+  }
+  await sleep(1000);
+}
+
+async function runOutcome(){
+  document.getElementById('barrier').style.display='none';
+  document.getElementById('gateFinalLabel').classList.remove('show');
+  document.getElementById('gateResultLabel').classList.remove('show');
+  const o1 = document.getElementById('outcome1');
+  const o2 = document.getElementById('outcome2');
+  o2.classList.add('green');
+  await typeOn(o1, 'THREAT CLASS: FIBER-OPTIC GUIDED MUNITION');
+  await sleep(300);
+  await typeOn(o2, 'VERDICT: HOSTILE — GEOMETRY CONFIRMED');
+  await sleep(1800);
+}
+
+async function fadeToBlack(ms=900){
+  const overlay = document.createElement('div');
+  overlay.style.position='absolute'; overlay.style.top=0; overlay.style.left=0;
+  overlay.style.width='100%'; overlay.style.height='100%';
+  overlay.style.background='#0A0A0A'; overlay.style.opacity='0';
+  overlay.style.transition = `opacity ${ms}ms ease`;
+  overlay.style.zIndex = 100;
+  document.getElementById('stage').appendChild(overlay);
+  await sleep(30);
+  overlay.style.opacity='1';
+  await sleep(ms);
+  return overlay;
+}
+
+async function runAct0(){
+  const co1 = document.getElementById('co1');
+  const co2 = document.getElementById('co2');
+  const co3 = document.getElementById('co3');
+
+  await typeOn(co1, "EVERY CAMERA. EVERY RADAR. EVERY GPS RECEIVER.", 22);
+  await sleep(400);
+  await typeOn(co2, "TRUSTS INPUTS THE ADVERSARY CONTROLS.", 22);
+  await sleep(900);
+  co1.classList.add('strike');
+  co2.classList.add('strike');
+  await sleep(900);
+
+  document.getElementById('coldOpen').style.display='none';
+  await sleep(200);
+  document.getElementById('coldOpen').style.display='flex';
+  co1.style.display='none';
+  co2.style.display='none';
+
+  await typeOn(co3, "OTIS DOESN'T.", 30);
+  await sleep(1200);
+
+  document.getElementById('coldOpen').style.display='none';
+  document.getElementById('logoCard').style.display='flex';
+  const wm = document.getElementById('logoWordmark');
+  wm.classList.add('reveal');
+  await sleep(1600);
+  document.getElementById('logoSub').classList.add('show');
+  await sleep(1200);
+  document.getElementById('logoFooter').classList.add('show');
+  await sleep(2200);
+
+  document.getElementById('logoCard').style.display='none';
+}
+
+async function runAct1(){
+  await runHookScene();
+  await showFreeze([
+    'Fiber-optic guided munitions trail a physical wire instead of transmitting a signal.',
+    'There is nothing to intercept. Nothing to jam. Nothing to spoof.',
+    'Every RF-based defense system is structurally blind to this threat class.'
+  ]);
+
+  document.getElementById('hookLabel1').classList.remove('show');
+  document.getElementById('hookLabel2').classList.remove('show');
+  document.getElementById('hookLabel3').classList.remove('show');
+
+  await runPeelReveal();
+  await showFreeze([
+    "OTIS never asked what this object looks like.",
+    "It measures what the object physically is — shape, structure, how it moves.",
+    "That can't be faked the way a picture can."
+  ]);
+
+  objCtx.clearRect(0,0,objCanvas.width,objCanvas.height);
+  await runVerificationWalk(true, true);
+
+  await runDecisionGate(true);
+  await showFreeze([
+    'This gate has two outcomes: confirmed, or rejected. Nothing in between.',
+    'No confidence score. No "maybe." A percentage can be argued with — this can\'t.'
+  ]);
+
+  await runOutcome();
+  await fadeToBlack(1200);
+}
+
+async function main(){
+  await runAct0();
+  document.getElementById('liveScene').style.display='block';
+  await runAct1();
+}
+
+main();
+</script>
+</body>
+</html>
