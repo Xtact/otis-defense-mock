@@ -2,12 +2,12 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>OTIS // Demo — Act 0 + Act 1</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
-  html,body { background:#060606; overflow:hidden; height:100vh; width:100vw; }
-  #stage { position:relative; width:100vw; height:100vh; background:#060606; overflow:hidden; }
+  html,body { background:#060606; overflow:hidden; height:100%; width:100%; }
+  #stage { position:relative; width:100vw; height:100vh; height:100dvh; background:#060606; overflow:hidden; }
   canvas { position:absolute; top:0; left:0; }
 
   .grid-overlay {
@@ -30,7 +30,7 @@
     position:absolute; top:14%; left:50%; transform:translateX(-50%);
     width:88%; text-align:center; z-index:10;
     font-family:'Courier New', monospace; font-weight:bold; color:#F0F0F0;
-    letter-spacing:3px; font-size:4.6rem; line-height:1.4; opacity:0;
+    letter-spacing:3px; font-size:4.2rem; line-height:1.4; opacity:0;
     text-shadow: 0 0 18px rgba(232,232,232,0.25); white-space:pre-wrap;
   }
   #titleAnchor.show { opacity:1; }
@@ -79,7 +79,7 @@
   }
   #freezeText {
     font-family: -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif;
-    color:#F5F5F5; font-size:3.6rem; font-weight:700; line-height:1.55; text-align:center;
+    color:#F5F5F5; font-size:3.4rem; font-weight:700; line-height:1.55; text-align:center;
     max-width:1400px; padding:0 40px;
   }
   #freezeText div { opacity:0; transition:opacity 1s ease; margin-bottom:34px; }
@@ -106,10 +106,10 @@
   <div id="titleAnchor"></div>
 
   <div id="liveScene">
-    <canvas id="objectCanvas" width="1920" height="1080"></canvas>
-    <canvas id="peelCanvas" width="1920" height="1080"></canvas>
-    <canvas id="trackCanvas" width="1920" height="1080"></canvas>
-    <canvas id="hudCanvas" width="1920" height="1080"></canvas>
+    <canvas id="objectCanvas"></canvas>
+    <canvas id="peelCanvas"></canvas>
+    <canvas id="trackCanvas"></canvas>
+    <canvas id="hudCanvas"></canvas>
     <div id="feedTag"><span class="dot"></span>EO/IR FEED — LIVE</div>
     <div id="feedClock">SECTOR 7 // ALT 340M</div>
     <div class="hud small hookLabel" id="hookLabel1" style="top:58%;">NO RF EMISSION<br>DETECTED</div>
@@ -134,6 +134,11 @@
 <script>
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const SPIN_SPEED = 12;
+
+let VW = document.documentElement.clientWidth;
+let VH = document.documentElement.clientHeight;
+function vw(){ return VW; }
+function vh(){ return VH; }
 
 function typeOn(el, text, speed=90) {
   return new Promise(resolve => {
@@ -180,8 +185,6 @@ async function showFreeze(lines, holdEach=6500, exitHold=2800, enterGap=1000) {
 
 const bgCanvas = document.getElementById('bgCanvas');
 const bgCtx = bgCanvas.getContext('2d');
-function resizeBg(){ bgCanvas.width = window.innerWidth; bgCanvas.height = window.innerHeight; }
-window.addEventListener('resize', resizeBg); resizeBg();
 function drawStars(){
   bgCtx.fillStyle = '#060606'; bgCtx.fillRect(0,0,bgCanvas.width,bgCanvas.height);
   for (let i=0;i<180;i++){
@@ -192,7 +195,6 @@ function drawStars(){
     bgCtx.fillRect(x,y, r>0.85?2:1, r>0.85?2:1);
   }
 }
-drawStars();
 
 const objCanvas = document.getElementById('objectCanvas');
 const objCtx = objCanvas.getContext('2d');
@@ -204,11 +206,26 @@ const hudCanvas = document.getElementById('hudCanvas');
 const hudCtx = hudCanvas.getContext('2d');
 
 function sizeCanvases(){
-  [objCanvas, peelCanvas, trackCanvas, hudCanvas].forEach(c => {
-    c.width = window.innerWidth; c.height = window.innerHeight;
+  [bgCanvas, objCanvas, peelCanvas, trackCanvas, hudCanvas].forEach(c => {
+    c.width = VW; c.height = VH;
   });
 }
-window.addEventListener('resize', sizeCanvases); sizeCanvases();
+sizeCanvases();
+drawStars();
+
+let resizeTimer = null;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    const newW = document.documentElement.clientWidth;
+    const newH = document.documentElement.clientHeight;
+    if (Math.abs(newW - VW) > 60 || Math.abs(newH - VH) > 120){
+      VW = newW; VH = newH;
+      sizeCanvases();
+      drawStars();
+    }
+  }, 200);
+});
 
 function drawDroneShape(ctx, fillMode, propPhase=0){
   const arms = [[26,22],[26,-22],[-26,-22],[-26,22]];
@@ -231,7 +248,7 @@ function drawDroneShape(ctx, fillMode, propPhase=0){
     ctx.translate(ax,ay);
     ctx.rotate(propPhase);
     ctx.lineWidth = fillMode ? 2 : 1.4;
-    ctx.strokeStyle = fillMode ? '#B0B0B0' : ctx.strokeStyle;
+    if (fillMode) ctx.strokeStyle = '#B0B0B0';
     ctx.beginPath();
     ctx.moveTo(-9.5,0); ctx.lineTo(9.5,0);
     ctx.stroke();
@@ -342,8 +359,8 @@ function drawScanSweep(ctx, w, h, t){
   ctx.fillRect(0, y-40, w, 80);
 }
 
-const centerX = () => window.innerWidth*0.58;
-const centerY = () => window.innerHeight*0.34;
+const centerX = () => vw()*0.58;
+const centerY = () => vh()*0.34;
 const TAIL_OFFSET = 20;
 
 async function flyDroneIn(){
@@ -380,9 +397,9 @@ async function runHookScene(){
   document.getElementById('feedClock').textContent = 'SECTOR 7 // ALT 340M';
 
   await showFreeze([
-    "Here's what you're looking at.",
-    "A small FPV drone — the platform seeing<br>the most fiber-optic use on the battlefield today.",
-    "Watch the wire trailing behind it.<br>That's its only link back to the operator. No radio at all."
+    'Fiber-optic guided FPV platform — the dominant<br>threat variant currently fielded.',
+    'Guidance runs over a physical fiber-optic tether,<br>not a radio uplink.',
+    'No RF emission. Nothing to geolocate, jam, or spoof.'
   ], 5200, 1600, 900);
 
   await flyDroneIn();
@@ -474,17 +491,17 @@ const stations = [
 
 function drawTrackStatic(pulsePhase=0){
   trackCtx.clearRect(0,0,trackCanvas.width,trackCanvas.height);
-  const y = window.innerHeight*0.5;
+  const y = vh()*0.5;
   trackCtx.strokeStyle = '#3A3A3A';
   trackCtx.lineWidth = 3;
   trackCtx.shadowColor = '#3A3A3A';
   trackCtx.shadowBlur = 6;
   trackCtx.beginPath();
-  trackCtx.moveTo(window.innerWidth*0.06, y);
-  trackCtx.lineTo(window.innerWidth*0.94, y);
+  trackCtx.moveTo(vw()*0.06, y);
+  trackCtx.lineTo(vw()*0.94, y);
   trackCtx.stroke();
   stations.forEach((st,idx) => {
-    const x = window.innerWidth*(0.06 + st.frac*0.88);
+    const x = vw()*(0.06 + st.frac*0.88);
     const pulse = 0.5 + 0.5*Math.sin(pulsePhase + idx);
     trackCtx.strokeStyle = '#4A4A4A';
     trackCtx.beginPath();
@@ -499,18 +516,18 @@ function drawTrackStatic(pulsePhase=0){
 
 async function runVerificationWalk(freezeAfter1, freezeAfter3){
   document.getElementById('gateLine').style.display='none';
-  const y = window.innerHeight*0.5;
-  const startX = window.innerWidth*0.06;
-  const endX = window.innerWidth*0.94;
+  const y = vh()*0.5;
+  const startX = vw()*0.06;
+  const endX = vw()*0.94;
 
   const stationLabel = document.createElement('div');
   stationLabel.className = 'hud tiny stationLabel show';
-  stationLabel.style.top = (y/window.innerHeight*100 - 22) + '%';
+  stationLabel.style.top = (y/vh()*100 - 22) + '%';
   document.getElementById('liveScene').appendChild(stationLabel);
 
   const resultLabel = document.createElement('div');
   resultLabel.className = 'hud micro stationLabel show';
-  resultLabel.style.top = (y/window.innerHeight*100 + 12) + '%';
+  resultLabel.style.top = (y/vh()*100 + 12) + '%';
   document.getElementById('liveScene').appendChild(resultLabel);
 
   let stIdx = 0;
@@ -525,7 +542,7 @@ async function runVerificationWalk(freezeAfter1, freezeAfter3){
     drawWireframeObject(trackCtx, x, y, 1.05, 1, '#F0F0F0', 0, elapsed*SPIN_SPEED);
 
     if (stIdx < stations.length){
-      const stX = window.innerWidth*(0.06 + stations[stIdx].frac*0.88);
+      const stX = vw()*(0.06 + stations[stIdx].frac*0.88);
       if (x >= stX){
         stationLabel.style.left = stX + 'px';
         stationLabel.style.transform = 'translateX(-50%)';
@@ -598,10 +615,8 @@ async function runOutcome(){
 async function runAct0(){
   const title = document.getElementById('titleAnchor');
 
-  await typeOn(title, "EVERY CAMERA.\nEVERY RADAR.\nEVERY GPS RECEIVER.", 80);
-  await sleep(2200);
-  await typeOn(title, "TRUSTS INPUTS\nTHE ADVERSARY CONTROLS.", 80);
-  await sleep(2600);
+  await typeOn(title, "EVERY CAMERA. EVERY RADAR. EVERY GPS RECEIVER.\nTRUSTS INPUTS THE ADVERSARY CONTROLS.", 55);
+  await sleep(3400);
 
   title.classList.remove('show');
   await sleep(250);
