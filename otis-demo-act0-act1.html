@@ -11,39 +11,41 @@
   canvas { position:absolute; top:0; left:0; }
 
   .hud {
-    position:absolute; font-family:'Courier New', monospace; color:#E8E8E8;
-    letter-spacing:2px; font-size:0.9rem; opacity:0; white-space:pre;
+    position:absolute; font-family:'Courier New', monospace; font-weight:bold; color:#E8E8E8;
+    letter-spacing:2px; font-size:1.9rem; opacity:0; white-space:pre-wrap;
+    text-align:center; line-height:1.5;
   }
   .hud.show { opacity:1; }
   .hud.red { color:#FF3B30; }
   .hud.green { color:#39FF88; }
   .hud.strike { text-decoration: line-through; color:#5A5A5A; }
+  .hud.small { font-size:1.3rem; }
 
   #coldOpen {
     position:absolute; top:0; left:0; width:100%; height:100%;
     display:flex; flex-direction:column; align-items:center; justify-content:center;
-    text-align:center; gap:14px;
+    text-align:center; gap:26px; padding:0 6%;
   }
   .co-line {
-    font-family:'Courier New', monospace; color:#E8E8E8; letter-spacing:3px;
-    font-size:1.3rem; opacity:0;
+    font-family:'Courier New', monospace; font-weight:bold; color:#E8E8E8; letter-spacing:2px;
+    font-size:2.2rem; opacity:0; line-height:1.5; max-width:1000px;
   }
   .co-line.show { opacity:1; }
   .co-line.strike { text-decoration:line-through; color:#FF3B30; opacity:1; }
 
   #logoCard { position:absolute; top:0; left:0; width:100%; height:100%; display:none;
-    flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:12px; }
+    flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:22px; padding:0 6%; }
   #logoWordmark {
-    font-family:'Courier New', monospace; font-size:3rem; font-weight:bold; letter-spacing:10px;
+    font-family:'Courier New', monospace; font-size:4.4rem; font-weight:bold; letter-spacing:14px;
     color:#E8E8E8; position:relative; overflow:hidden; clip-path: inset(0 0 100% 0);
   }
-  #logoWordmark.reveal { animation: scanReveal 1.4s steps(24) forwards; }
+  #logoWordmark.reveal { animation: scanReveal 1.8s steps(24) forwards; }
   @keyframes scanReveal { to { clip-path: inset(0 0 0% 0); } }
-  #logoSub { font-family:'Courier New', monospace; font-size:0.85rem; letter-spacing:3px; color:#8A8A8A; opacity:0; transition:opacity 1s ease; }
+  #logoSub { font-family:'Courier New', monospace; font-weight:bold; font-size:1.2rem; letter-spacing:2px; color:#B0B0B0; opacity:0; transition:opacity 1.2s ease; max-width:820px; line-height:1.6; }
   #logoSub.show { opacity:1; }
-  #logoFooter { position:absolute; bottom:32px; left:50%; transform:translateX(-50%);
-    font-family:'Courier New', monospace; font-size:0.6rem; letter-spacing:2px; color:#8A8A8A;
-    opacity:0; transition:opacity 1s ease; text-align:center; }
+  #logoFooter { position:absolute; bottom:40px; left:50%; transform:translateX(-50%);
+    font-family:'Courier New', monospace; font-weight:bold; font-size:0.85rem; letter-spacing:2px; color:#8A8A8A;
+    opacity:0; transition:opacity 1.2s ease; text-align:center; }
   #logoFooter.show { opacity:1; }
 
   #liveScene { position:absolute; top:0; left:0; width:100%; height:100%; display:none; }
@@ -51,27 +53,26 @@
   #peelCanvas { z-index:6; pointer-events:none; }
   #trackCanvas { z-index:5; }
 
-  .hookLabel { top: 78%; left:50%; transform:translateX(-50%); text-align:center; }
+  .hookLabel { left:50%; transform:translateX(-50%); width:88%; text-align:center; }
 
   #freezeOverlay {
     position:absolute; top:0; left:0; width:100%; height:100%;
-    background:rgba(10,10,10,0.4); z-index:50; display:none;
-    align-items:flex-end; justify-content:center; padding-bottom:12%;
+    background:rgba(10,10,10,0.55); z-index:50; display:none;
+    align-items:center; justify-content:center;
   }
   #freezeText {
     font-family: -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif;
-    color:#E8E8E8; font-size:1.15rem; line-height:1.7; text-align:center;
-    max-width:780px; padding:0 24px;
+    color:#F2F2F2; font-size:2rem; font-weight:600; line-height:1.65; text-align:center;
+    max-width:1000px; padding:0 32px;
   }
-  #freezeText div { opacity:0; transition:opacity 0.5s ease; margin-bottom:8px; }
+  #freezeText div { opacity:0; transition:opacity 0.7s ease; margin-bottom:22px; }
   #freezeText div.show { opacity:1; }
 
-  .stationLabel { text-align:center; }
+  .stationLabel { text-align:center; width:360px; }
   .gateLine { position:absolute; top:50%; left:8%; width:84%; height:2px; background:#3A3A3A; z-index:4; }
-  .stationMarker { position:absolute; top:50%; width:3px; height:34px; background:#3A3A3A; transform:translate(-50%,-50%); z-index:4; }
 
   #barrier {
-    position:absolute; top:50%; left:50%; width:14px; height:120px; background:#3A3A3A;
+    position:absolute; top:50%; left:50%; width:16px; height:130px; background:#3A3A3A;
     transform:translate(-50%,-50%); z-index:7; transition: transform 0.08s steps(1), background 0.08s steps(1);
   }
   #barrier.open { transform: translate(-50%,-50%) rotate(90deg) translateX(0px); background:#39FF88; }
@@ -83,14 +84,14 @@
   <canvas id="bgCanvas"></canvas>
 
   <div id="coldOpen">
-    <div class="co-line" id="co1">EVERY CAMERA. EVERY RADAR. EVERY GPS RECEIVER.</div>
-    <div class="co-line" id="co2">TRUSTS INPUTS THE ADVERSARY CONTROLS.</div>
-    <div class="co-line" id="co3" style="margin-top:20px;">OTIS DOESN'T.</div>
+    <div class="co-line" id="co1">EVERY CAMERA. EVERY RADAR.<br>EVERY GPS RECEIVER.</div>
+    <div class="co-line" id="co2">TRUSTS INPUTS THE<br>ADVERSARY CONTROLS.</div>
+    <div class="co-line" id="co3" style="margin-top:24px;">OTIS DOESN'T.</div>
   </div>
 
   <div id="logoCard">
     <div id="logoWordmark">O.T.I.S.</div>
-    <div id="logoSub">SKYGUARD LABS — GEOMETRY INTELLIGENCE FOR THE FULL THREAT SPECTRUM</div>
+    <div id="logoSub">SKYGUARD LABS<br>GEOMETRY INTELLIGENCE FOR THE FULL THREAT SPECTRUM</div>
     <div id="logoFooter">COLORADO | USA</div>
   </div>
 
@@ -98,16 +99,16 @@
     <canvas id="objectCanvas" width="1920" height="1080"></canvas>
     <canvas id="peelCanvas" width="1920" height="1080"></canvas>
     <canvas id="trackCanvas" width="1920" height="1080"></canvas>
-    <div class="hud hookLabel" id="hookLabel1">NO RF EMISSION DETECTED</div>
-    <div class="hud hookLabel" id="hookLabel2" style="top:82%;">NO GPS CORRELATION</div>
-    <div class="hud hookLabel" id="hookLabel3" style="top:86%;">LEGACY C-UAS: NO TRACK</div>
-    <div class="hud" id="peelLabel" style="top:12%; left:50%; transform:translateX(-50%); text-align:center; font-size:1.1rem; letter-spacing:3px;">APPEARANCE IS NEGOTIABLE. GEOMETRY IS NOT.</div>
+    <div class="hud hookLabel" id="hookLabel1" style="top:74%;">NO RF EMISSION DETECTED</div>
+    <div class="hud hookLabel" id="hookLabel2" style="top:81%;">NO GPS CORRELATION</div>
+    <div class="hud hookLabel" id="hookLabel3" style="top:88%;">LEGACY C-UAS: NO TRACK</div>
+    <div class="hud" id="peelLabel" style="top:10%; left:50%; transform:translateX(-50%); width:90%; text-align:center; font-size:1.7rem;">APPEARANCE IS NEGOTIABLE.<br>GEOMETRY IS NOT.</div>
     <div class="gateLine" id="gateLine"></div>
     <div id="barrier"></div>
-    <div class="hud" id="gateFinalLabel" style="top:20%; left:50%; transform:translateX(-50%); text-align:center; letter-spacing:3px;">FINAL VERIFICATION GATE</div>
-    <div class="hud" id="gateResultLabel" style="top:60%; left:50%; transform:translateX(-50%); text-align:center; font-size:1.3rem; letter-spacing:3px;"></div>
-    <div class="hud" id="outcome1" style="top:44%; left:50%; transform:translateX(-50%); text-align:center; font-size:1.2rem; letter-spacing:2px;">THREAT CLASS: FIBER-OPTIC GUIDED MUNITION</div>
-    <div class="hud" id="outcome2" style="top:52%; left:50%; transform:translateX(-50%); text-align:center; font-size:1.2rem; letter-spacing:2px;" class="hud green"></div>
+    <div class="hud" id="gateFinalLabel" style="top:16%; left:50%; transform:translateX(-50%); width:90%; text-align:center;">FINAL VERIFICATION GATE</div>
+    <div class="hud" id="gateResultLabel" style="top:62%; left:50%; transform:translateX(-50%); width:90%; text-align:center; font-size:2.1rem;"></div>
+    <div class="hud" id="outcome1" style="top:40%; left:50%; transform:translateX(-50%); width:90%; text-align:center; font-size:1.9rem;">THREAT CLASS:<br>FIBER-OPTIC GUIDED MUNITION</div>
+    <div class="hud green" id="outcome2" style="top:56%; left:50%; transform:translateX(-50%); width:90%; text-align:center; font-size:1.9rem;"></div>
   </div>
 
   <div id="freezeOverlay">
@@ -118,36 +119,37 @@
 <script>
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-function typeOn(el, text, speed=28) {
+function typeOn(el, text, speed=70) {
   return new Promise(resolve => {
-    el.textContent = '';
+    el.innerHTML = '';
     el.classList.add('show');
+    const chars = text.split('');
     let i = 0;
+    let buffer = '';
     const timer = setInterval(() => {
-      el.textContent += text[i];
+      const ch = chars[i];
+      if (ch === '\n') {
+        buffer += '<br>';
+      } else {
+        buffer += ch;
+      }
+      el.innerHTML = buffer;
       i++;
-      if (i >= text.length) { clearInterval(timer); resolve(); }
+      if (i >= chars.length) { clearInterval(timer); resolve(); }
     }, speed);
   });
 }
 
-function strike(el) {
-  return new Promise(resolve => {
-    el.classList.add('strike');
-    setTimeout(resolve, 200);
-  });
-}
-
-async function showFreeze(lines, holdEach=1600, exitHold=700) {
+async function showFreeze(lines, holdEach=3200, exitHold=1400, enterGap=500) {
   const overlay = document.getElementById('freezeOverlay');
   const textBox = document.getElementById('freezeText');
   textBox.innerHTML = '';
   overlay.style.display = 'flex';
   for (const line of lines) {
     const div = document.createElement('div');
-    div.textContent = line;
+    div.innerHTML = line;
     textBox.appendChild(div);
-    await sleep(50);
+    await sleep(enterGap);
     div.classList.add('show');
     await sleep(holdEach);
   }
@@ -155,7 +157,6 @@ async function showFreeze(lines, holdEach=1600, exitHold=700) {
   overlay.style.display = 'none';
 }
 
-// ---------- Background starfield (static, subtle, non-looping-critical) ----------
 const bgCanvas = document.getElementById('bgCanvas');
 const bgCtx = bgCanvas.getContext('2d');
 function resizeBg(){ bgCanvas.width = window.innerWidth; bgCanvas.height = window.innerHeight; }
@@ -171,7 +172,6 @@ function drawStaticNoise(){
 }
 drawStaticNoise();
 
-// ---------- Object + Peel canvases ----------
 const objCanvas = document.getElementById('objectCanvas');
 const objCtx = objCanvas.getContext('2d');
 const peelCanvas = document.getElementById('peelCanvas');
@@ -213,9 +213,9 @@ function drawWireframeObject(ctx, cx, cy, scale=1, alpha=1, color='#E8E8E8'){
   ctx.scale(scale, scale);
   ctx.globalAlpha = alpha;
   ctx.strokeStyle = color;
-  ctx.lineWidth = 1.4;
+  ctx.lineWidth = 1.6;
   ctx.shadowColor = color;
-  ctx.shadowBlur = 6;
+  ctx.shadowBlur = 7;
   ctx.beginPath();
   ctx.moveTo(-70, 0);
   ctx.lineTo(-20, -14);
@@ -238,60 +238,61 @@ const centerY = () => window.innerHeight*0.42;
 async function runHookScene(){
   document.getElementById('liveScene').style.display = 'block';
   objCtx.clearRect(0,0,objCanvas.width,objCanvas.height);
-  drawSolidObject(objCtx, centerX(), centerY(), 1.4);
-  await sleep(3800);
-  await typeOn(document.getElementById('hookLabel1'), 'NO RF EMISSION DETECTED');
-  await sleep(200);
-  await typeOn(document.getElementById('hookLabel2'), 'NO GPS CORRELATION');
-  await sleep(200);
-  await typeOn(document.getElementById('hookLabel3'), 'LEGACY C-UAS: NO TRACK');
-  await sleep(900);
+  drawSolidObject(objCtx, centerX(), centerY(), 1.5);
+  await sleep(4500);
+  await typeOn(document.getElementById('hookLabel1'), 'NO RF EMISSION DETECTED', 65);
+  await sleep(1200);
+  await typeOn(document.getElementById('hookLabel2'), 'NO GPS CORRELATION', 65);
+  await sleep(1200);
+  await typeOn(document.getElementById('hookLabel3'), 'LEGACY C-UAS: NO TRACK', 65);
+  await sleep(2200);
 }
 
 async function runPeelReveal(){
   const label = document.getElementById('peelLabel');
   label.classList.add('show');
-  label.textContent = 'APPEARANCE IS NEGOTIABLE. GEOMETRY IS NOT.';
+  label.innerHTML = 'APPEARANCE IS NEGOTIABLE.<br>GEOMETRY IS NOT.';
 
   const cx = centerX(), cy = centerY();
-  const steps = 60;
+  const steps = 70;
   for (let s=0; s<=steps; s++){
     const p = s/steps;
     objCtx.clearRect(0,0,objCanvas.width,objCanvas.height);
-    drawSolidObject(objCtx, cx, cy, 1.4, 1-p);
+    drawSolidObject(objCtx, cx, cy, 1.5, 1-p);
 
     peelCtx.clearRect(0,0,peelCanvas.width,peelCanvas.height);
     peelCtx.save();
     peelCtx.globalAlpha = Math.min(0.9, p*1.4);
     for (let i=0;i<140;i++){
       const ang = (i/140)*Math.PI*2;
-      const dist = p*90;
-      const px = cx + Math.cos(ang)*(30+dist) + (Math.random()-0.5)*10;
-      const py = cy + Math.sin(ang)*(14+dist*0.5) + (Math.random()-0.5)*10;
+      const dist = p*95;
+      const px = cx + Math.cos(ang)*(32+dist) + (Math.random()-0.5)*10;
+      const py = cy + Math.sin(ang)*(15+dist*0.5) + (Math.random()-0.5)*10;
       peelCtx.fillStyle = '#8A8A8A';
-      peelCtx.fillRect(px, py, 1.6, 1.6);
+      peelCtx.fillRect(px, py, 1.8, 1.8);
     }
     peelCtx.restore();
 
-    drawWireframeObject(objCtx, cx, cy, 1.4, p);
-    await sleep(16);
+    drawWireframeObject(objCtx, cx, cy, 1.5, p);
+    await sleep(24);
   }
-  await sleep(1200);
+  await sleep(1800);
   peelCtx.clearRect(0,0,peelCanvas.width,peelCanvas.height);
 
+  await sleep(600);
   label.classList.add('strike');
-  await sleep(700);
+  await sleep(1000);
   label.classList.remove('strike');
-  await typeOn(label, 'INITIATING GEOMETRY VERIFICATION');
-  await sleep(900);
+  await typeOn(label, 'INITIATING GEOMETRY\nVERIFICATION', 60);
+  await sleep(1800);
   label.classList.remove('show');
 }
 
 const stations = [
-  { frac:0.20, name:'STAGE 1 — SHAPE EXTRACTION', result:'OUTLINE ISOLATED' },
-  { frac:0.42, name:'STAGE 2 — MOTION CONSISTENCY', result:'MOVEMENT PATTERN VERIFIED' },
-  { frac:0.64, name:'STAGE 3 — STRUCTURAL ANALYSIS', result:'3-D STRUCTURE RESOLVED' },
-  { frac:0.86, name:'STAGE 4 — CATALOG MATCH', result:'MATCHED: THREAT MODEL CATALOG\u2122' },
+  { frac:0.20, name:'STAGE 1\nSHAPE EXTRACTION', result:'OUTLINE ISOLATED' },
+  { frac:0.42, name:'STAGE 2\nMOTION CONSISTENCY', result:'MOVEMENT PATTERN\nVERIFIED' },
+  { frac:0.64, name:'STAGE 3\nSTRUCTURAL ANALYSIS', result:'3-D STRUCTURE\nRESOLVED' },
+  { frac:0.86, name:'STAGE 4\nCATALOG MATCH', result:'MATCHED:\nTHREAT MODEL CATALOG\u2122' },
 ];
 
 function drawTrackStatic(){
@@ -321,24 +322,24 @@ async function runVerificationWalk(freezeAfter1, freezeAfter3){
   const endX = window.innerWidth*0.92;
 
   const stationLabel = document.createElement('div');
-  stationLabel.className = 'hud stationLabel show';
-  stationLabel.style.top = (y/window.innerHeight*100 - 12) + '%';
+  stationLabel.className = 'hud small stationLabel show';
+  stationLabel.style.top = (y/window.innerHeight*100 - 16) + '%';
   document.getElementById('liveScene').appendChild(stationLabel);
 
   const resultLabel = document.createElement('div');
-  resultLabel.className = 'hud green stationLabel show';
-  resultLabel.style.top = (y/window.innerHeight*100 + 8) + '%';
+  resultLabel.className = 'hud green small stationLabel show';
+  resultLabel.style.top = (y/window.innerHeight*100 + 10) + '%';
   document.getElementById('liveScene').appendChild(resultLabel);
 
   let stIdx = 0;
-  const totalDurationMs = 4200;
-  const frames = 90;
+  const totalDurationMs = 6000;
+  const frames = 100;
   for (let f=0; f<=frames; f++){
     const p = f/frames;
     const x = startX + (endX-startX)*p;
     trackCtx.clearRect(0,0,trackCanvas.width,trackCanvas.height);
     drawTrackStatic();
-    drawWireframeObject(trackCtx, x, y, 0.7, 1);
+    drawWireframeObject(trackCtx, x, y, 0.75, 1);
 
     if (stIdx < stations.length){
       const stX = window.innerWidth*(0.08 + stations[stIdx].frac*0.84);
@@ -347,28 +348,27 @@ async function runVerificationWalk(freezeAfter1, freezeAfter3){
         stationLabel.style.transform = 'translateX(-50%)';
         resultLabel.style.left = stX + 'px';
         resultLabel.style.transform = 'translateX(-50%)';
-        await typeOn(stationLabel, stations[stIdx].name, 14);
-        await sleep(150);
-        await typeOn(resultLabel, stations[stIdx].result, 14);
+        await typeOn(stationLabel, stations[stIdx].name, 45);
+        await sleep(500);
+        await typeOn(resultLabel, stations[stIdx].result, 45);
+        await sleep(1200);
 
         if (stIdx === 0 && freezeAfter1){
-          await sleep(500);
           await showFreeze([
-            'This first checkpoint extracts a raw outline of the object — its silhouette.',
-            'No color, no texture. Just shape.'
+            'This first checkpoint extracts a raw outline<br>of the object — its silhouette.',
+            'No color, no texture.<br>Just shape.'
           ]);
         }
         if (stIdx === 2 && freezeAfter3){
-          await sleep(500);
           await showFreeze([
-            'Here, the outline becomes a real 3-D structure and gets checked against the Threat Model Catalog\u2122 —',
-            'a library of known threat geometries, built from physics, not photographs.'
+            'Here, the outline becomes a real 3-D structure<br>and gets checked against the Threat Model Catalog\u2122 —',
+            'a library of known threat geometries,<br>built from physics, not photographs.'
           ]);
         }
         stIdx++;
         stationLabel.classList.remove('show');
         resultLabel.classList.remove('show');
-        await sleep(100);
+        await sleep(300);
       }
     }
     await sleep(totalDurationMs/frames);
@@ -385,19 +385,19 @@ async function runDecisionGate(pass=true){
   barrier.style.display = 'block';
   barrier.style.top = '50%';
 
-  await typeOn(finalLabel, 'FINAL VERIFICATION GATE');
-  await sleep(900);
+  await typeOn(finalLabel, 'FINAL VERIFICATION GATE', 55);
+  await sleep(1800);
 
   if (pass){
     barrier.classList.add('open');
     resultLabel.classList.add('green');
-    await typeOn(resultLabel, 'PASS \u2192 CLASSIFIED');
+    await typeOn(resultLabel, 'PASS \u2192 CLASSIFIED', 60);
   } else {
     barrier.classList.add('fail');
     resultLabel.classList.add('red');
-    await typeOn(resultLabel, 'FAIL \u2192 ZERO');
+    await typeOn(resultLabel, 'FAIL \u2192 ZERO', 60);
   }
-  await sleep(1000);
+  await sleep(2200);
 }
 
 async function runOutcome(){
@@ -406,14 +406,13 @@ async function runOutcome(){
   document.getElementById('gateResultLabel').classList.remove('show');
   const o1 = document.getElementById('outcome1');
   const o2 = document.getElementById('outcome2');
-  o2.classList.add('green');
-  await typeOn(o1, 'THREAT CLASS: FIBER-OPTIC GUIDED MUNITION');
-  await sleep(300);
-  await typeOn(o2, 'VERDICT: HOSTILE — GEOMETRY CONFIRMED');
-  await sleep(1800);
+  await typeOn(o1, 'THREAT CLASS:\nFIBER-OPTIC GUIDED MUNITION', 55);
+  await sleep(1000);
+  await typeOn(o2, 'VERDICT: HOSTILE\nGEOMETRY CONFIRMED', 55);
+  await sleep(3200);
 }
 
-async function fadeToBlack(ms=900){
+async function fadeToBlack(ms=1400){
   const overlay = document.createElement('div');
   overlay.style.position='absolute'; overlay.style.top=0; overlay.style.left=0;
   overlay.style.width='100%'; overlay.style.height='100%';
@@ -432,32 +431,32 @@ async function runAct0(){
   const co2 = document.getElementById('co2');
   const co3 = document.getElementById('co3');
 
-  await typeOn(co1, "EVERY CAMERA. EVERY RADAR. EVERY GPS RECEIVER.", 22);
-  await sleep(400);
-  await typeOn(co2, "TRUSTS INPUTS THE ADVERSARY CONTROLS.", 22);
-  await sleep(900);
+  await typeOn(co1, "EVERY CAMERA. EVERY RADAR.\nEVERY GPS RECEIVER.", 50);
+  await sleep(1600);
+  await typeOn(co2, "TRUSTS INPUTS THE\nADVERSARY CONTROLS.", 50);
+  await sleep(2200);
   co1.classList.add('strike');
   co2.classList.add('strike');
-  await sleep(900);
+  await sleep(2200);
 
   document.getElementById('coldOpen').style.display='none';
-  await sleep(200);
+  await sleep(300);
   document.getElementById('coldOpen').style.display='flex';
   co1.style.display='none';
   co2.style.display='none';
 
-  await typeOn(co3, "OTIS DOESN'T.", 30);
-  await sleep(1200);
+  await typeOn(co3, "OTIS DOESN'T.", 65);
+  await sleep(2400);
 
   document.getElementById('coldOpen').style.display='none';
   document.getElementById('logoCard').style.display='flex';
   const wm = document.getElementById('logoWordmark');
   wm.classList.add('reveal');
-  await sleep(1600);
+  await sleep(2000);
   document.getElementById('logoSub').classList.add('show');
-  await sleep(1200);
-  document.getElementById('logoFooter').classList.add('show');
   await sleep(2200);
+  document.getElementById('logoFooter').classList.add('show');
+  await sleep(3600);
 
   document.getElementById('logoCard').style.display='none';
 }
@@ -465,9 +464,9 @@ async function runAct0(){
 async function runAct1(){
   await runHookScene();
   await showFreeze([
-    'Fiber-optic guided munitions trail a physical wire instead of transmitting a signal.',
-    'There is nothing to intercept. Nothing to jam. Nothing to spoof.',
-    'Every RF-based defense system is structurally blind to this threat class.'
+    'Fiber-optic guided munitions trail a physical wire<br>instead of transmitting a signal.',
+    'There is nothing to intercept.<br>Nothing to jam. Nothing to spoof.',
+    'Every RF-based defense system is<br>structurally blind to this threat class.'
   ]);
 
   document.getElementById('hookLabel1').classList.remove('show');
@@ -477,8 +476,8 @@ async function runAct1(){
   await runPeelReveal();
   await showFreeze([
     "OTIS never asked what this object looks like.",
-    "It measures what the object physically is — shape, structure, how it moves.",
-    "That can't be faked the way a picture can."
+    "It measures what the object physically is —<br>shape, structure, how it moves.",
+    "That can't be faked<br>the way a picture can."
   ]);
 
   objCtx.clearRect(0,0,objCanvas.width,objCanvas.height);
@@ -486,12 +485,12 @@ async function runAct1(){
 
   await runDecisionGate(true);
   await showFreeze([
-    'This gate has two outcomes: confirmed, or rejected. Nothing in between.',
-    'No confidence score. No "maybe." A percentage can be argued with — this can\'t.'
+    'This gate has two outcomes:<br>confirmed, or rejected. Nothing in between.',
+    'No confidence score. No "maybe."<br>A percentage can be argued with — this can\'t.'
   ]);
 
   await runOutcome();
-  await fadeToBlack(1200);
+  await fadeToBlack(1600);
 }
 
 async function main(){
