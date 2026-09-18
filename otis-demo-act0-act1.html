@@ -33,7 +33,7 @@
     letter-spacing:3px; font-size:4.2rem;
   }
   .titleLine {
-    height:1.4em; line-height:1.4em; opacity:0; white-space:nowrap; overflow:visible;
+    min-height:1.4em; line-height:1.4; opacity:0; white-space:normal; overflow:visible;
     text-shadow: 0 0 18px rgba(232,232,232,0.25);
   }
   .titleLine.show { opacity:1; }
@@ -85,7 +85,7 @@
     color:#F5F5F5; font-size:3.4rem; font-weight:700; line-height:1.55; text-align:center;
     width:84%; max-width:1400px; padding:0 40px;
   }
-  .freezeLine { height:2.4em; opacity:0; transition:opacity 1s ease; }
+  .freezeLine { min-height:2.4em; opacity:0; transition:opacity 1s ease; }
   .freezeLine.show { opacity:1; }
 
   .stationLabel { text-align:center; width:620px; }
@@ -99,6 +99,15 @@
   }
   #barrier.open { transform: translate(-50%,-50%) rotate(90deg) translateX(0px); background:#39FF88; box-shadow: 0 0 40px rgba(57,255,136,0.85); }
   #barrier.fail { background:#FF3B30; box-shadow: 0 0 40px rgba(255,59,48,0.85); }
+
+  @media (max-width: 900px) {
+    #titleAnchor { font-size: 2.1rem; }
+    #freezeText { font-size: 1.7rem; }
+    .hud { font-size: 2.7rem; }
+    .hud.small { font-size: 1.5rem; }
+    .hud.tiny { font-size: 1.05rem; }
+    .hud.micro { font-size: 0.85rem; }
+  }
 </style>
 </head>
 <body>
