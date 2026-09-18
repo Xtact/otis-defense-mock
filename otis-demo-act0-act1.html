@@ -30,10 +30,13 @@
     position:absolute; top:14%; left:50%; transform:translateX(-50%);
     width:88%; text-align:center; z-index:10;
     font-family:'Courier New', monospace; font-weight:bold; color:#F0F0F0;
-    letter-spacing:3px; font-size:4.2rem; line-height:1.4; opacity:0;
-    text-shadow: 0 0 18px rgba(232,232,232,0.25); white-space:pre-wrap;
+    letter-spacing:3px; font-size:4.2rem;
   }
-  #titleAnchor.show { opacity:1; }
+  .titleLine {
+    height:1.4em; line-height:1.4em; opacity:0; white-space:nowrap; overflow:visible;
+    text-shadow: 0 0 18px rgba(232,232,232,0.25);
+  }
+  .titleLine.show { opacity:1; }
 
   .hud {
     position:absolute; font-family:'Courier New', monospace; font-weight:bold; color:#F0F0F0;
@@ -103,7 +106,10 @@
   <canvas id="bgCanvas"></canvas>
   <div class="grid-overlay"></div>
 
-  <div id="titleAnchor"></div>
+  <div id="titleAnchor">
+    <div class="titleLine" id="titleLine1"></div>
+    <div class="titleLine" id="titleLine2"></div>
+  </div>
 
   <div id="liveScene">
     <canvas id="objectCanvas"></canvas>
@@ -155,6 +161,20 @@ function typeOn(el, text, speed=90) {
       if (i >= chars.length) { clearInterval(timer); resolve(); }
     }, speed);
   });
+}
+
+async function typeOnLines(lineEls, lines, speed=55) {
+  for (let i = 0; i < lineEls.length; i++) {
+    lineEls[i].innerHTML = '';
+    lineEls[i].classList.remove('show');
+  }
+  for (let i = 0; i < lines.length; i++) {
+    await typeOn(lineEls[i], lines[i], speed);
+  }
+}
+
+function clearLines(lineEls) {
+  lineEls.forEach(el => { el.innerHTML = ''; el.classList.remove('show'); });
 }
 
 async function sceneTransition(ms=350){
@@ -613,17 +633,23 @@ async function runOutcome(){
 }
 
 async function runAct0(){
-  const title = document.getElementById('titleAnchor');
+  const lineEls = [document.getElementById('titleLine1'), document.getElementById('titleLine2')];
 
-  await typeOn(title, "EVERY CAMERA. EVERY RADAR. EVERY GPS RECEIVER.\nTRUSTS INPUTS THE ADVERSARY CONTROLS.", 55);
+  await typeOnLines(lineEls, [
+    'EVERY CAMERA. EVERY RADAR. EVERY GPS RECEIVER.',
+    'TRUSTS INPUTS THE ADVERSARY CONTROLS.'
+  ], 55);
   await sleep(3400);
 
-  title.classList.remove('show');
+  lineEls.forEach(el => el.classList.remove('show'));
   await sleep(250);
+  clearLines(lineEls);
 
-  await typeOn(title, "OTIS DOESN'T.", 90);
+  await typeOnLines(lineEls, ["OTIS DOESN'T."], 90);
   await sleep(2000);
-  title.classList.remove('show');
+  lineEls.forEach(el => el.classList.remove('show'));
+  await sleep(250);
+  clearLines(lineEls);
 
   await sceneTransition(400);
 }
